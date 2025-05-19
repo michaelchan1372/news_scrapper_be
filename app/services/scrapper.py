@@ -42,7 +42,6 @@ def get_news_links(keyword, max_results, region, region_name):
     conn.commit()
     
     conn.close()
-    print("Insert successful")
     folder_created = file_write.create_folder_if_not_exist(f'./output/{region_name}')
     if folder_created:
         file_write.save_to_csv(news, f'./output/{region_name}/news_articles.csv', csv_titles)

@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 app = FastAPI()
 
 load_dotenv()
-print("loaded")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,4 +17,3 @@ app.add_middleware(
 )
 
 app.include_router(router.scrapper_router)
-

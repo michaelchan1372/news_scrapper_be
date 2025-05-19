@@ -3,7 +3,7 @@ import os
 import zipfile
 
 def write_to_text(str, path):
-    with open(path, "w", encoding='utf-8') as f:
+    with open(path, "w", encoding='utf-8-sig') as f:
         f.write(str)
 
 def save_to_csv(news_items, filename, fieldnames, append=False):
@@ -11,7 +11,7 @@ def save_to_csv(news_items, filename, fieldnames, append=False):
     if append:
         mode = 'a'
     # Write to CSV
-    with open(filename, mode=mode, newline='', encoding='utf-8') as file:
+    with open(filename, mode=mode, newline='', encoding='utf-8-sig') as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         if not append:
             writer.writeheader()
@@ -26,7 +26,7 @@ def create_folder_if_not_exist(str):
 
 def read_from_csv(filename, fieldnames):
     items = []
-    with open(filename, newline='', encoding='utf-8') as csvfile:
+    with open(filename, newline='', encoding='utf-8-sig') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             obj = {}

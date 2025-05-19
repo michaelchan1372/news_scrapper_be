@@ -1,0 +1,88 @@
+from fastapi import APIRouter, Depends, Query, HTTPException, BackgroundTasks
+from fastapi.responses import FileResponse
+import urllib
+from services import database
+import services.file_write as file_write
+import services.scrapper as scrapper
+from starlette import status
+from pydantic import BaseModel, Field
+
+router = APIRouter(
+    prefix='/scrape',
+    tags=['scrape']
+)
+
+async def scrapping(keyword, max_results):
+    region_items = {}
+    file_write.create_folder_if_not_exist("./output")
+
+    regions = scrapper.regions
+    for region in regions:
+        # 1. Scrap links
+        name = region["name"]
+        news_items = scrapper.get_news_links(keyword, max_results, region["code"], name)
+        region_items[name] = news_items
+
+    for region in regions:
+        # 2. Selenium
+        name = region["name"]
+        news_items = region_items[name]
+        scrapper.scrape_content(news_items, name, keyword)
+
+class ScrapeRequest(BaseModel):
+    keyword: str
+    max_results: int
+
+@router.post("/start", status_code=status.HTTP_200_OK)
+async def scrapping_req(params:ScrapeRequest, background_tasks: BackgroundTasks):
+    background_tasks.add_task(scrapping, params.keyword, params.max_results)
+    return {
+        "message": "success"
+    }
+
+@router.get("/", status_code=status.HTTP_200_OK)
+async def get_data():
+    return database.fetch_group()
+
+
+class DownloadRequest(BaseModel):
+    region: str
+
+@router.post("/download", status_code=status.HTTP_200_OK)
+async def download_data(params:DownloadRequest):
+    params.region = urllib.parse.unquote(params.region)
+    file_path = f'./output/{params.region}/news_articles.csv'  # Your file path here
+    return FileResponse(
+        path=file_path,
+        filename=params.region,
+        media_type="text/csv"
+    )
+
+class FetchPageRequest(BaseModel):
+    region: str
+    published_date: str
+
+@router.post("/page", status_code=status.HTTP_200_OK)
+async def get_page_data(params:FetchPageRequest):
+    params.region = urllib.parse.unquote(params.region)
+    return database.fetch_page(params.published_date, params.region)
+
+class FetchPTextRequest(BaseModel):
+    id: str
+
+@router.post("/text", status_code=status.HTTP_200_OK)
+async def get_page_text(params:FetchPTextRequest):
+    path = database.fetch_page_paths(params.id)["content_path"]
+    with open(path, 'r', encoding='utf-8-sig') as file:
+        content = file.read()
+        return content
+    
+@router.post("/zip", status_code=status.HTTP_200_OK)
+async def get_page_text(params:FetchPTextRequest):
+    print("hi")
+    zip_path = database.fetch_page_paths(params.id)["html_path"] + ".zip"
+    return FileResponse(
+        path=zip_path,
+        filename="example.zip",
+        media_type="application/zip"
+    )
