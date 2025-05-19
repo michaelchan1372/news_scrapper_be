@@ -1,4 +1,4 @@
-https://18.118.2.9:80 {
+https://18.118.2.9:443 {
     tls internal
     reverse_proxy fastapi:8000
 }
