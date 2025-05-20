@@ -13,21 +13,27 @@ router = APIRouter(
 )
 
 async def scrapping(keyword, max_results):
-    region_items = {}
-    file_write.create_folder_if_not_exist("./output")
+    try:
+        print("starting scrapping for " + keyword)
+        region_items = {}
+        file_write.create_folder_if_not_exist("./output")
 
-    regions = scrapper.regions
-    for region in regions:
-        # 1. Scrap links
-        name = region["name"]
-        news_items = scrapper.get_news_links(keyword, max_results, region["code"], name)
-        region_items[name] = news_items
+        regions = scrapper.regions
+        for region in regions:
+            # 1. Scrap links
+            name = region["name"]
+            news_items = scrapper.get_news_links(keyword, max_results, region["code"], name)
+            region_items[name] = news_items
 
-    for region in regions:
-        # 2. Selenium
-        name = region["name"]
-        news_items = region_items[name]
-        scrapper.scrape_content(news_items, name, keyword)
+        for region in regions:
+            # 2. Selenium
+            name = region["name"]
+            news_items = region_items[name]
+            #under maintenance
+            #scrapper.scrape_content(news_items, name, keyword)
+    except Exception as e:
+        print("Error occur, but continue the loop")
+        print(f"An error occurred: {e}")
 
 class ScrapeRequest(BaseModel):
     keyword: str
@@ -79,7 +85,6 @@ async def get_page_text(params:FetchPTextRequest):
     
 @router.post("/zip", status_code=status.HTTP_200_OK)
 async def get_page_text(params:FetchPTextRequest):
-    print("hi")
     zip_path = database.fetch_page_paths(params.id)["html_path"] + ".zip"
     return FileResponse(
         path=zip_path,
