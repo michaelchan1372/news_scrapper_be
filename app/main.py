@@ -3,8 +3,9 @@ from fastapi import FastAPI, Depends
 import routers as router
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from services.scheduler import lifespan
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 load_dotenv()
 
