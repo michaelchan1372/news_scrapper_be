@@ -8,9 +8,13 @@ app = FastAPI()
 
 load_dotenv()
 
+origins = [
+    "https://news-scrapper-ct8mo42gy-michael-chans-projects-4c4a7c7d.vercel.app",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
