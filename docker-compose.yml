@@ -16,25 +16,19 @@ services:
       retries: 3
       start_period: 40s
     restart: always
-
-  caddy:
-    image: caddy:latest
-    container_name: caddy
+  
+  nginx:
+    image: nginx:latest
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
+        - ./nginx/conf.d:/etc/nginx/conf.d
+        - ./ssl:/etc/nginx/ssl
     depends_on:
       - fastapi
     networks:
       - web
-
-volumes:
-  caddy_data:
-  caddy_config:
 
 networks:
   web:
