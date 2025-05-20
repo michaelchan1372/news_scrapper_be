@@ -24,7 +24,7 @@ find_history = """
 """
 
 find_by_scrape_date = """
-    select DATE(ni.published) published_date, sl.region, count(*) num
+    select DATE(ni.published) published_date, sl.region, count(*) num, GROUP_CONCAT(distinct sl.key_word) 
     from news_items ni 
     join scrape_logs sl on sl.id = ni.sl_id 
     GROUP BY DATE(ni.published), sl.region 

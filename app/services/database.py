@@ -81,6 +81,7 @@ def fetch_group():
         payload["published_date"] = row[0]
         payload["region"] = row[1]
         payload["num"] = row[2]
+        payload["keywords"] = row[3]
         res.append(payload)
 
     return res
