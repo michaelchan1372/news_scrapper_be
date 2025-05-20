@@ -14,9 +14,9 @@ dependencies:
   - cryptography
   - fastapi
   - uvicorn
-  - schedule
   - pip
   - pip:
       - webdriver-manager
       - pywebcopy
       - gunicorn
+      - schedule
