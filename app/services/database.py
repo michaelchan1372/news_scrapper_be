@@ -44,7 +44,7 @@ def create_logs(conn, region_name, keyword):
 
 def create_new_items(conn, object, log_id):
     cursor = conn.cursor()
-    cursor.execute(sql.insert_news_items_to_db, (object['title'], object['link'], object['published'], object['description'], log_id))
+    cursor.execute(sql.insert_news_items_to_db, (object['title'], object['link'], object['published'], object['description'], log_id, object['source']))
     last_id = cursor.lastrowid
     cursor.close()
     return last_id
@@ -105,6 +105,7 @@ def fetch_page(published_date, region):
         payload["html_path"] = row[7]
         payload["scrape_date"] = row[8]
         payload["keyword"] = row[9]
+        payload["source"] = row[10]
         res.append(payload)
 
     return res

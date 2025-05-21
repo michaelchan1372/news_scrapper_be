@@ -42,6 +42,7 @@ find_page = """
     , ni.html_path
     , sl.scrape_date 
     , sl.key_word 
+    , ni.source
     from news_items ni 
     join scrape_logs sl 
         on ni.sl_id = sl.id
