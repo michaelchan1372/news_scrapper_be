@@ -1,6 +1,6 @@
 insert_news_items_to_db = """
-    INSERT INTO news_items (`title`,`link`,`published`,`description`, `sl_id`)
-    VALUES (%s, %s, %s, %s, %s)
+    INSERT INTO news_items (`title`,`link`,`published`,`description`, `sl_id`, `source`)
+    VALUES (%s, %s, %s, %s, %s, %s)
 """
 
 insert_logs_to_db = """

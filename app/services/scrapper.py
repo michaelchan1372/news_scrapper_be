@@ -9,7 +9,7 @@ import services.selenium_runner as selenium_runner
 import services.database as database
 
 excluded_titel = ["Shopping", "Maps"]
-csv_titles = ['id','title', 'link', 'published', 'description']
+csv_titles = ['id','title', 'link', 'published', 'description', 'source']
 regions = [
     {"name": "china","code": "hl=zh-CN&gl=CN&ceid=CN:zh"}, 
     {"name": "hong kong", "code": "hl=zh-HK&gl=HK&ceid=HK:zh-Hant"},
@@ -30,12 +30,14 @@ def get_news_links(keyword, max_results, region, region_name):
     news = []
     
     for idx, entry in enumerate(feed.entries[:max_results], start=1):
+        source = entry.get("source", {})
         if  entry.title not in titles and entry.link not in links:
             object = {
                 'title': entry.title, 
                 'link': entry.link,
                 'published': database.convert_to_db_date(entry.published) if 'published' in entry else None,
                 'description': entry.description,
+                'source': source.get("title", "Unknown")
             }
             
             last_id = database.create_new_items(conn, object, log_id)

@@ -21,7 +21,7 @@ async def scrapping_action():
 
 def run_scheduler():
     asyncio.run(scrapping_action())
-    schedule.every(5).hours.do(lambda: asyncio.run(scrapping_action()))
+    schedule.every(4).hours.do(lambda: asyncio.run(scrapping_action()))
 
     while True:
         schedule.run_pending()
