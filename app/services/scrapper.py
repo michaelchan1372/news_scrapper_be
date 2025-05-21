@@ -14,8 +14,8 @@ regions = [
     {"name": "china","code": "hl=zh-CN&gl=CN&ceid=CN:zh"}, 
     {"name": "hong kong", "code": "hl=zh-HK&gl=HK&ceid=HK:zh-Hant"},
     {"name": "canada", "code": "hl=en-CA&gl=CA&ceid=CA%3Aen"},
-    {"name": "usa", "code": "gl=US&hl=en-US&ceid=US:en"}
-
+    {"name": "usa", "code": "gl=US&hl=en-US&ceid=US:en"},
+    {"name": "uk", "code": "hl=en-GB&gl=GB&ceid=GB:en"}
 ]
 
 def get_news_links(keyword, max_results, region, region_name):
