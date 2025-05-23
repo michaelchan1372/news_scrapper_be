@@ -5,7 +5,7 @@ COPY environment.yml /tmp/environment.yml
 RUN conda env create -f /tmp/environment.yml
 
 # Activate environment
-SHELL ["conda", "run", "-n", "fastapi-env", "/bin/bash", "-c"]
+SHELL ["conda", "run", "-n", "scrapper_env", "/bin/bash", "-c"]
 
 # Copy app
 WORKDIR /app
@@ -26,14 +26,6 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list && \
     apt-get update && apt-get install -y google-chrome-stable && \
     rm -rf /var/lib/apt/lists/*
-
-# Install ChromeDriver (match version to Chrome)
-RUN CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+') && \
-    CHROMEDRIVER_VERSION=$(curl -s "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}") && \
-    wget -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" && \
-    unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
-    chmod +x /usr/local/bin/chromedriver && \
-    rm /tmp/chromedriver.zip
 
 # Set display port to avoid crashing
 ENV DISPLAY=:99
