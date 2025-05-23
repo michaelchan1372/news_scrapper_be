@@ -55,9 +55,10 @@ def get_news_links(keyword, max_results, region, region_name):
     return news
 
 
-def scrape_content(news_items, name, keyword):
+def scrape_content(name, keyword):
     conn = database.init_connection()
     driver = selenium_runner.init_driver()
+    news_items = database.news_items_to_scape(name)
     for news_item in news_items:
         selenium_runner.scrape_article(driver, news_item, conn, name, keyword)
         

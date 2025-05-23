@@ -56,3 +56,22 @@ find_page_path = """
     from news_items ni 
     where ni .id = %s
 """
+
+news_items_to_scrape = """
+    select ni.id
+    , ni.title
+    , ni.link
+    , ni.published
+    , ni.scrape_date
+    , ni.description
+    , ni.sl_id
+    , ni.content_path
+    , ni.html_path
+    , ni.source
+    from news_items ni 
+    join scrape_logs sl 
+    on ni.sl_id = sl.id 
+    where sl.region = %s
+    and (ni.content_path is null or ni.html_path is null)
+
+"""

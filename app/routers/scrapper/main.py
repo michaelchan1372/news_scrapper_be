@@ -28,9 +28,7 @@ async def scrapping(keyword, max_results):
         for region in regions:
             # 2. Selenium
             name = region["name"]
-            news_items = region_items[name]
-            #under maintenance
-            #scrapper.scrape_content(news_items, name, keyword)
+            scrapper.scrape_content(name, keyword)
     except Exception as e:
         print("Error occur, but continue the loop")
         print(f"An error occurred: {e}")

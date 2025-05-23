@@ -22,6 +22,7 @@ def convert_to_db_date(date_str):
 
 def init_connection():
     # Connect to MySQL
+    print("Connecting to " + host)
     conn = pymysql.connect(
         host=host,
         user=db_user,
@@ -121,5 +122,25 @@ def fetch_page_paths(id):
     payload["html_path"] = row[2]
     return payload
 
+def news_items_to_scape(region_name):
+    conn = init_connection()
+    cursor = conn.cursor()
+    res = []
+    cursor.execute(sql.news_items_to_scrape, (region_name))
+    rows = cursor.fetchall()
+    for row in rows:
+        payload = {}
+        payload["id"] = row[0]
+        payload["title"] = row[1]
+        payload["link"] = row[2]
+        payload["published"] = row[3]
+        payload["scrape_date"] = row[4]
+        payload["description"] = row[5]
+        payload["sl_id"] = row[6]
+        payload["content_path"] = row[7]
+        payload["html_path"] = row[8]
+        payload["source"] = row[9]
+        res.append(payload)
 
+    return res
 
