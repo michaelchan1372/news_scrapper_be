@@ -52,7 +52,7 @@ def create_new_items(conn, object, log_id):
 
 def save_path(conn, id, content_path, html_path):
     cursor = conn.cursor()
-    cursor.execute(sql.update_path, (content_path, html_path, id))
+    cursor.execute(sql.update_path, (content_path, id))
     last_id = cursor.lastrowid
     cursor.close()
     return last_id

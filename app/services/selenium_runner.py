@@ -63,11 +63,11 @@ def scrape_article(driver, news_item, conn, region_name, keyword):
         content_filtered = "\n".join(filtered_lines)
         
         content_path =  f"./output/{region_name}/content/" + str(news_item["id"]) + ".txt"
-        content_filted_path = f"./output/{region_name}/content/" + str(news_item["id"]) + "_filtered.txt"
+        content_filtered_path = f"./output/{region_name}/content/" + str(news_item["id"]) + "_filtered.txt"
         html_path =  f"./output/{region_name}/content/" + str(news_item["id"])
         saveToCsv(content, content_path, region_name)
-        saveToCsv(content_filtered, content_filted_path, region_name)
-        archieveSite(driver, html_path, news_link)
+        saveToCsv(content_filtered, content_filtered_path, region_name)
+        #archieveSite(driver, html_path, news_link)
         udpateDbPath(conn, id, content_path, html_path)
         # Todo: Save as a html file
         return (content)

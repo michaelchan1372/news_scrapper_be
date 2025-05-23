@@ -15,7 +15,7 @@ select_log_id = """
 update_path = """
     UPDATE news_items 
     SET content_path = %s,
-    html_path = %s
+    
     WHERE id = %s
 """
 
