@@ -9,12 +9,6 @@ services:
       - "8000:8000"
     networks:
       - web
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     restart: always
   
   nginx:
@@ -29,6 +23,17 @@ services:
       - fastapi
     networks:
       - web
+    restart: always
+    
+  selenium:
+    image: selenium/standalone-chrome
+    container_name: selenium
+    shm_size: 2gb
+    ports:
+      - "4444:4444"
+    networks:
+      - web
+    restart: always
 
 networks:
   web:

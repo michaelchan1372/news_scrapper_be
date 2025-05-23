@@ -1,4 +1,5 @@
 import os
+import tempfile
 import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -25,9 +26,19 @@ selectors = [
         ]
 
 def init_driver():
+    print("init chrome driver")
     options = Options()
     options.add_argument("--headless")  # Optional: run without opening a window
-    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    # Create a unique temporary directory
+    user_data_dir = tempfile.mkdtemp()
+    options.add_argument(f'--user-data-dir={user_data_dir}')
+    
+    driver = webdriver.Remote(
+    command_executor='http://selenium:4444/wd/hub',
+    options=options
+    )
+    return driver
+    #return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 def scrape_article(driver, news_item, conn, region_name, keyword):
     news_link = news_item["link"]
