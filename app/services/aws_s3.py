@@ -23,7 +23,7 @@ def upload_file_to_s3(file_path, object_key):
         print("NoCredentialsError")
         return False
     
-def get_presigned_url(bucket_name, object_key, expiration=3600):
+def get_presigned_url(object_key, expiration=3600):
     try:
         url = s3.generate_presigned_url('get_object',
                                         Params={'Bucket': bucket_name, 'Key': object_key},
