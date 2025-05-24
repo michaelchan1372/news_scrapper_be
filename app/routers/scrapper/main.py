@@ -3,10 +3,12 @@ from fastapi import APIRouter, Depends, Query, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse
 import urllib
 from services import database
+from services.aws_s3 import get_presigned_url
 import services.file_write as file_write
 import services.scrapper as scrapper
 from starlette import status
 from pydantic import BaseModel, Field
+import requests
 
 router = APIRouter(
     prefix='/scrape',
@@ -82,9 +84,9 @@ class FetchPTextRequest(BaseModel):
 @router.post("/text", status_code=status.HTTP_200_OK)
 async def get_page_text(params:FetchPTextRequest):
     path = database.fetch_page_paths(params.id)["content_path"]
-    with open(path, 'r', encoding='utf-8-sig') as file:
-        content = file.read()
-        return content
+    url = get_presigned_url(path)
+    response = requests.get(url)
+    return response.txt
     
 @router.post("/zip", status_code=status.HTTP_200_OK)
 async def get_page_text(params:FetchPTextRequest):
