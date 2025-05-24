@@ -86,7 +86,7 @@ async def get_page_text(params:FetchPTextRequest):
     path = database.fetch_page_paths(params.id)["content_path"]
     url = get_presigned_url(path)
     response = requests.get(url)
-    return response.txt
+    return response.text
     
 @router.post("/zip", status_code=status.HTTP_200_OK)
 async def get_page_text(params:FetchPTextRequest):
