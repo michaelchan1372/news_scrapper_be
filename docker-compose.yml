@@ -25,15 +25,15 @@ services:
       - web
     restart: always
     
-  selenium:
-    image: selenium/standalone-chrome
-    container_name: selenium
-    shm_size: 2gb
-    ports:
-      - "4444:4444"
-    networks:
-      - web
-    restart: always
+  # selenium:
+  #   image: selenium/standalone-chrome
+  #   container_name: selenium
+  #   shm_size: 2gb
+  #   ports:
+  #     - "4444:4444"
+  #   networks:
+  #     - web
+  #   restart: always
 
 networks:
   web:

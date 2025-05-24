@@ -20,3 +20,4 @@ dependencies:
       - pywebcopy
       - gunicorn
       - schedule
+      - boto3
