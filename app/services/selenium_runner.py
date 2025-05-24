@@ -68,16 +68,19 @@ def scrape_article(driver, news_item, conn, region_name, keyword):
         
         content_path =  f"./output/{region_name}/content/" + str(news_item["id"]) + ".txt"
         content_filtered_path = f"./output/{region_name}/content/" + str(news_item["id"]) + "_filtered.txt"
-        html_path =  f"./output/{region_name}/content/" + str(news_item["id"])
+        
         # save txt
+        aws_key = "uploads/" + f"{region_name}/content/" + str(news_item["id"]) + ".txt"
         saveToCsv(content, content_path, region_name)
-        txt_url = upload_file_to_s3(content_path, "uploads/" + content_path)
+        txt_url = upload_file_to_s3(content_path, aws_key)
         if txt_url != False: 
-            udpateDbContentPath(conn, id, txt_url)
+            udpateDbContentPath(conn, id, aws_key)
         # save filtered txt
         saveToCsv(content_filtered, content_filtered_path, region_name)
         # save zip
-        zip_url = archieveSite(driver, html_path, news_link)
+        folder_path =  f"./output/{region_name}/content/" + str(news_item["id"])
+        aws_key = "uploads/" + f"{region_name}/content/" + str(news_item["id"]) + ".zip"
+        zip_url = archieveSite(driver, folder_path, news_link, aws_key)
         if zip_url != False: 
             udpateDbHtmlPath(conn, id, zip_url)
         # Todo: Save as a html file
@@ -91,9 +94,9 @@ def saveToCsv(content, content_path, region_name):
     file_write.create_folder_if_not_exist(f"./output/{region_name}/content")
     file_write.write_to_text(content, content_path)
  
-def archieveSite(driver, html_path, news_link):
+def archieveSite(driver, folder_path, news_link, aws_key):
     try:
-        file_write.create_folder_if_not_exist(html_path)
+        file_write.create_folder_if_not_exist(folder_path)
         html = driver.page_source
         soup = BeautifulSoup(html, "html.parser")
         tags = soup.find_all(['img', 'script', 'link'])
@@ -101,14 +104,14 @@ def archieveSite(driver, html_path, news_link):
             attr = 'src' if tag.name in ['img', 'script'] else 'href'
             if tag.has_attr(attr):
                 file_url = urljoin(news_link, tag[attr])
-                local_name = download_file(file_url, html_path)
+                local_name = download_file(file_url, folder_path)
                 if local_name:
                     tag[attr] = local_name
-        with open(os.path.join(html_path, "index.html"), "w", encoding="utf-8") as f:
+        with open(os.path.join(folder_path, "index.html"), "w", encoding="utf-8") as f:
             f.write(soup.prettify())
-        zip_path = html_path + ".zip"
-        file_write.zip_folder(html_path, zip_path)
-        zip_url = upload_file_to_s3(html_path + ".zip", "uploads/" + zip_path)
+        zip_path = folder_path + ".zip"
+        file_write.zip_folder(folder_path, zip_path)
+        zip_url = upload_file_to_s3(folder_path + ".zip", aws_key)
         return zip_url
     except Exception as e:
         

@@ -90,9 +90,6 @@ async def get_page_text(params:FetchPTextRequest):
     
 @router.post("/zip", status_code=status.HTTP_200_OK)
 async def get_page_text(params:FetchPTextRequest):
-    zip_path = database.fetch_page_paths(params.id)["html_path"] + ".zip"
-    return FileResponse(
-        path=zip_path,
-        filename="example.zip",
-        media_type="application/zip"
-    )
+    zip_path = database.fetch_page_paths(params.id)["html_path"]
+    url = get_presigned_url(zip_path)
+    return url
