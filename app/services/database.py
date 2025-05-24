@@ -50,9 +50,16 @@ def create_new_items(conn, object, log_id):
     cursor.close()
     return last_id
 
-def save_path(conn, id, content_path, html_path):
+def save_content_path(conn, id, content_path):
     cursor = conn.cursor()
-    cursor.execute(sql.update_path, (content_path, id))
+    cursor.execute(sql.update_content_path, (content_path, id))
+    last_id = cursor.lastrowid
+    cursor.close()
+    return last_id
+
+def save_html_path(conn, id, html_path):
+    cursor = conn.cursor()
+    cursor.execute(sql.update_html_path, (html_path, id))
     last_id = cursor.lastrowid
     cursor.close()
     return last_id

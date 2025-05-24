@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, Query, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse
 import urllib
@@ -11,6 +12,8 @@ router = APIRouter(
     prefix='/scrape',
     tags=['scrape']
 )
+
+ENABLE_SELENIUM = os.getenv('ENABLE_SELENIUM')
 
 async def scrapping(keyword, max_results):
     try:
@@ -29,7 +32,8 @@ async def scrapping(keyword, max_results):
             # 2. Selenium
             name = region["name"]
             #maintenance
-            #scrapper.scrape_content(name, keyword)
+            if ENABLE_SELENIUM == "1":
+                scrapper.scrape_content(name, keyword)
     except Exception as e:
         print("Error occur, but continue the loop")
         print(f"An error occurred: {e}")

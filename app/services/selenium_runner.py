@@ -1,5 +1,6 @@
 import os
 import tempfile
+import traceback
 import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -12,6 +13,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import re
 
+from services.aws_s3 import upload_file_to_s3
 import services.database as database
 import services.file_write as file_write
 
@@ -25,6 +27,8 @@ selectors = [
             "div.content",           # Generic fallback
         ]
 
+RUNNING_IN_DOCKER = os.getenv('RUNNING_IN_DOCKER')
+
 def init_driver():
     print("init chrome driver")
     options = Options()
@@ -32,13 +36,14 @@ def init_driver():
     # Create a unique temporary directory
     user_data_dir = tempfile.mkdtemp()
     options.add_argument(f'--user-data-dir={user_data_dir}')
-    
-    driver = webdriver.Remote(
-    command_executor='http://selenium:4444/wd/hub',
-    options=options
-    )
-    return driver
-    #return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    if RUNNING_IN_DOCKER == "1":
+        driver = webdriver.Remote(
+        command_executor='http://selenium:4444/wd/hub',
+        options=options
+        )
+        return driver
+    else:
+        return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 def scrape_article(driver, news_item, conn, region_name, keyword):
     news_link = news_item["link"]
@@ -46,7 +51,6 @@ def scrape_article(driver, news_item, conn, region_name, keyword):
     try:
         driver.get(news_link)
         sleep(5)  # Wait for the page to load
-        
         
         # Approach 1, soup
         html = driver.page_source
@@ -65,14 +69,22 @@ def scrape_article(driver, news_item, conn, region_name, keyword):
         content_path =  f"./output/{region_name}/content/" + str(news_item["id"]) + ".txt"
         content_filtered_path = f"./output/{region_name}/content/" + str(news_item["id"]) + "_filtered.txt"
         html_path =  f"./output/{region_name}/content/" + str(news_item["id"])
+        # save txt
         saveToCsv(content, content_path, region_name)
+        txt_url = upload_file_to_s3(content_path, "uploads/" + content_path)
+        if txt_url != False: 
+            udpateDbContentPath(conn, id, txt_url)
+        # save filtered txt
         saveToCsv(content_filtered, content_filtered_path, region_name)
-        #archieveSite(driver, html_path, news_link)
-        udpateDbPath(conn, id, content_path, html_path)
+        # save zip
+        zip_url = archieveSite(driver, html_path, news_link)
+        if zip_url != False: 
+            udpateDbHtmlPath(conn, id, zip_url)
         # Todo: Save as a html file
         return (content)
     except Exception as e:
         print(f"Error scraping {news_link}: {e}")
+        print(traceback.format_exc())
         return ""
 
 def saveToCsv(content, content_path, region_name):
@@ -94,14 +106,22 @@ def archieveSite(driver, html_path, news_link):
                     tag[attr] = local_name
         with open(os.path.join(html_path, "index.html"), "w", encoding="utf-8") as f:
             f.write(soup.prettify())
-        file_write.zip_folder(html_path, html_path + ".zip")
+        zip_path = html_path + ".zip"
+        file_write.zip_folder(html_path, zip_path)
+        zip_url = upload_file_to_s3(html_path + ".zip", "uploads/" + zip_path)
+        return zip_url
     except Exception as e:
         
         print("Failed to scrape" + driver.current_url)
         print(e)
+        return False
 
-def udpateDbPath(conn, id, content_path, html_path):
-    database.save_path(conn, id, content_path, html_path)
+def udpateDbContentPath(conn, id, content_path):
+    database.save_content_path(conn, id, content_path)
+    conn.commit()
+
+def udpateDbHtmlPath(conn, id, html_path):
+    database.save_html_path(conn, id, html_path)
     conn.commit()
 
 def download_file(url, folder):

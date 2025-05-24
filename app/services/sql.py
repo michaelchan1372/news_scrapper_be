@@ -12,10 +12,15 @@ select_log_id = """
     SELECT `id` from `scrape_logs` WHERE `scrape_date` = %s
 """
 
-update_path = """
+update_content_path = """
     UPDATE news_items 
-    SET content_path = %s,
-    
+    SET content_path = %s
+    WHERE id = %s
+"""
+
+update_html_path = """
+    UPDATE news_items 
+    SET html_path = %s
     WHERE id = %s
 """
 
