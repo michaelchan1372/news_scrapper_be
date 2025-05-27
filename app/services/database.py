@@ -1,4 +1,6 @@
 import pymysql
+import requests
+from services.aws_s3 import get_presigned_url
 import services.sql as sql
 from datetime import datetime
 import os
@@ -90,8 +92,9 @@ def fetch_group():
         payload["region"] = row[1]
         payload["num"] = row[2]
         payload["keywords"] = row[3]
+        payload["summary"] = row[4]
         res.append(payload)
-
+    conn.close()
     return res
 
 
@@ -115,10 +118,10 @@ def fetch_page(published_date, region):
         payload["keyword"] = row[9]
         payload["source"] = row[10]
         res.append(payload)
-
+    conn.close()
     return res
 
-def fetch_page_paths(id):
+def fetch_page_path(id):
     conn = init_connection()
     cursor = conn.cursor()
     payload = {}
@@ -127,7 +130,25 @@ def fetch_page_paths(id):
     payload["id"] = row[0]
     payload["content_path"] = row[1]
     payload["html_path"] = row[2]
+    conn.close()
     return payload
+
+def fetch_page_paths(ids):
+    conn = init_connection()
+    cursor = conn.cursor()
+    res = []
+    cursor.execute(sql.find_page_path, (ids))
+    rows = cursor.fetchall()
+
+    for row in rows:
+        payload = {}
+        payload["id"] = row[0]
+        payload["content_path"] = row[1]
+        payload["html_path"] = row[2]
+        res.append(payload)
+    conn.close()
+    return res
+
 
 def news_items_to_scape(region_name):
     conn = init_connection()
@@ -148,6 +169,76 @@ def news_items_to_scape(region_name):
         payload["html_path"] = row[8]
         payload["source"] = row[9]
         res.append(payload)
-
+    conn.close()
     return res
 
+def fetch_page_text(id):
+    path = fetch_page_path(id)["content_path"]
+    url = get_presigned_url(path)
+    response = requests.get(url)
+    return response.text
+
+def fetch_pages_text(ids):
+    pages = fetch_page_paths(ids)
+    res = []
+    for page in pages:
+        path = page["content_path"]
+        url = get_presigned_url(path)
+        response = requests.get(url)
+        text = response.text
+        res.append(text)
+    return res
+
+def get_articles_for_summarize():
+    conn = init_connection()
+    cursor = conn.cursor()
+    res = []
+    cursor.execute(sql.news_to_summarize, ())
+    rows = cursor.fetchall()
+    for row in rows:
+        payload = {}
+        payload["publised_date"] = row[0]
+        payload["ni_ids"] = row[1]
+        payload["keyword"] = row[2]
+        payload["region"] = row[3]
+        res.append(payload)
+    conn.close()
+    return res
+    
+def saveSummary(news_article_group):
+    conn = init_connection()
+    cursor = conn.cursor()
+    cursor.execute(sql.insert_summary, (
+        news_article_group["publised_date"],
+        news_article_group["region"],
+        news_article_group["keyword"],
+        news_article_group["summary"],
+        news_article_group["model_name"],
+        news_article_group["input_tokens"],
+        news_article_group["output_tokens"]
+    ))
+    last_id = cursor.lastrowid
+    cursor.execute(sql.update_news_item_summary, (
+        last_id,
+        news_article_group["ni_ids"]
+    ))
+
+    conn.commit()
+    conn.close()
+
+def remove_news(region, published_date):
+    conn = init_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(sql.fetch_news_to_be_revoked, (
+        region, published_date
+    ))
+    res = []
+    rows = cursor.fetchall()
+    for row in rows:
+        id = row[0]
+        cursor.execute(sql.revoked_news, (
+            id
+        ))
+    conn.commit()
+    conn.close()

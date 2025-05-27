@@ -83,13 +83,20 @@ class FetchPTextRequest(BaseModel):
 
 @router.post("/text", status_code=status.HTTP_200_OK)
 async def get_page_text(params:FetchPTextRequest):
-    path = database.fetch_page_paths(params.id)["content_path"]
-    url = get_presigned_url(path)
-    response = requests.get(url)
-    return response.text
+    text = database.fetch_page_text(params.id)
+    return text
     
 @router.post("/zip", status_code=status.HTTP_200_OK)
 async def get_page_text(params:FetchPTextRequest):
-    zip_path = database.fetch_page_paths(params.id)["html_path"]
+    zip_path = database.fetch_page_path(params.id)["html_path"]
     url = get_presigned_url(zip_path)
     return url
+
+
+class HideQuery(BaseModel):
+    region: str
+    published_date: str
+@router.delete("/remove_news", status_code=status.HTTP_200_OK)
+async def remove_news(params: HideQuery = Depends()):
+    database.remove_news(params.region, params.published_date)
+    return "success"
