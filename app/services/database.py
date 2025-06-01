@@ -189,11 +189,39 @@ def fetch_pages_text(ids):
         res.append(text)
     return res
 
-def get_articles_for_summarize():
+def fetch_pages_summary(ids):
+    conn = init_connection()
+    cursor = conn.cursor()
+    texts = []
+    cursor.execute(sql.find_page_summary, (ids))
+    rows = cursor.fetchall()
+    for row in rows:
+        summary = row[1]
+        texts.append(summary)
+    return texts
+
+def fetch_article_summary(ids):
+    conn = init_connection()
+    cursor = conn.cursor()
+    texts = []
+    cursor.execute(sql.check_summary_finished, (ids))
+    row = cursor.fetchone()
+    if row[0] == row[1]:
+        cursor.execute(sql.check_summary_finished, (ids))
+        rows = cursor.fetchall()
+        for row in rows:
+            texts.append(row[0])
+        
+    conn.close()
+    return texts
+
+def get_daily_summarize_article():
+    # Find any article that does not have a summarize id
+    # to combine with existing ds of same date
     conn = init_connection()
     cursor = conn.cursor()
     res = []
-    cursor.execute(sql.news_to_summarize, ())
+    cursor.execute(sql.daily_news_to_summarize, ())
     rows = cursor.fetchall()
     for row in rows:
         payload = {}
@@ -204,8 +232,23 @@ def get_articles_for_summarize():
         res.append(payload)
     conn.close()
     return res
+
+def get_summarize_article():
+    conn = init_connection()
+    cursor = conn.cursor()
+    res = []
+    cursor.execute(sql.articles_to_summarize, ())
+    rows = cursor.fetchall()
+    for row in rows:
+        payload = {}
+        payload["ni_id"] = row[0]
+        payload["title"] = row[1]
+        payload["keyword"] = row[2]
+        res.append(payload)
+    conn.close()
+    return res
     
-def saveSummary(news_article_group):
+def save_summary_daily(news_article_group):
     conn = init_connection()
     cursor = conn.cursor()
     cursor.execute(sql.insert_summary, (
@@ -218,13 +261,28 @@ def saveSummary(news_article_group):
         news_article_group["output_tokens"]
     ))
     last_id = cursor.lastrowid
-    cursor.execute(sql.update_news_item_summary, (
-        last_id,
-        news_article_group["ni_ids"]
+    print("Last Id" + str(last_id))
+    ni_ids = news_article_group["ni_ids"]
+    ni_ids = [int(i.strip()) for i in news_article_group["ni_ids"].split(',')]
+    params = (last_id, *ni_ids)
+    cursor.execute(sql.update_news_item_summary(ni_ids), params)
+    conn.commit()
+    conn.close()
+
+def save_summary(news_article_group):
+    conn = init_connection()
+    cursor = conn.cursor()
+    cursor.execute(sql.update_article_summary, (
+        news_article_group["summary"],
+        news_article_group["model_name"],
+        news_article_group["input_tokens"],
+        news_article_group["output_tokens"],
+        news_article_group["ni_id"]
     ))
 
     conn.commit()
     conn.close()
+
 
 def remove_news(region, published_date):
     conn = init_connection()

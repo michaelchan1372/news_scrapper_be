@@ -7,7 +7,7 @@ from fastapi import FastAPI, Depends
 import time
 
 from routers.scrapper.main import scrapping
-from services.llm import summary
+from services.llm import article_summary, daily_article_summary
 
 ENABLE_SELENIUM = os.getenv('ENABLE_SELENIUM')
 ENABLE_AI_SUMMARY = os.getenv('ENABLE_AI_SUMMARY')
@@ -24,10 +24,15 @@ async def scrapping_action():
     print("Finish batch, waiting for next in 4 hours.")
     return "Success"
 
-async def summarize_articles():
-    task = asyncio.create_task(summary())
+async def daily_summary():
+    task = asyncio.create_task(article_summary())
     await task
+    print("Finished Article Summary")
+    task = asyncio.create_task(daily_article_summary())
+    await task
+    print("Finished Daily Summary")
     return "Success"
+
 
 def run_scheduler():
     if ENABLE_SELENIUM == "1":
@@ -36,8 +41,8 @@ def run_scheduler():
         schedule.every(4).hours.do(lambda: asyncio.run(scrapping_action()))
     if ENABLE_AI_SUMMARY == "1":
         print("AI Sumamry is enabled")
-        asyncio.run(summarize_articles())
-        schedule.every().day.at("12:00").do(lambda: asyncio.run(scrapping_action()))
+        asyncio.run(daily_summary())
+        schedule.every().day.at("12:00").do(lambda: asyncio.run(daily_summary()))
 
     while True:
         schedule.run_pending()

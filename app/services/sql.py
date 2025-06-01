@@ -72,6 +72,12 @@ find_page_path = """
     where ni .id in (%s)
 """
 
+find_page_summary = """
+    select id, summary
+    from news_items ni 
+    where ni .id in (%s)
+"""
+
 news_items_to_scrape = """
     select ni.id
     , ni.title
@@ -88,16 +94,17 @@ news_items_to_scrape = """
     on ni.sl_id = sl.id 
     where sl.region = %s
     and (ni.content_path is null or ni.html_path is null)
-
+    and ni.is_revoked = 0
 """
 
-news_to_summarize = """
+daily_news_to_summarize = """
     SELECT t.*, ds.id FROM
     (
-        SELECT DATE(ni.published) AS publised_date, GROUP_CONCAT(DISTINCT ni.id) ni_ids, sl.keyword, sl.region 
+        SELECT DATE(ni.published) AS publised_date, GROUP_CONCAT(DISTINCT ni.id) ni_ids, sl.keyword, sl.region, SUM(CASE WHEN ni.ds_id IS NULL THEN 1 ELSE 0 END) AS has_new
         FROM news_items ni
         join scrape_logs sl 
         on ni.sl_id = sl.id
+        WHERE ni.is_revoked = 0
         GROUP BY publised_date, sl.region , sl.keyword 
         ORDER BY publised_date
     ) t
@@ -106,7 +113,7 @@ news_to_summarize = """
     and t.keyword = ds.keyword 
     and t.region = ds.region 
     and ds.is_revoked = 0
-    where ds.id is null;
+    where ds.id is null or t.has_new > 0;
 """
 
 update_content_path = """
@@ -120,11 +127,24 @@ insert_summary = """
     VALUES (%s, %s, %s, %s, %s, %s, %s)
 """
 
-update_news_item_summary = """
-    UPDATE news_items 
-    SET ds_id = %s
-    WHERE id in (%s)
+update_article_summary = """
+    UPDATE news_items
+    SET summary = %s,
+    model_name = %s,
+    input_tokens = %s,
+    output_tokens = %s,
+    is_summary_revoked = 0
+    WHERE id = %s
+
 """
+
+def update_news_item_summary(ni_ids):
+    format_strings = ','.join(['%s'] * len(ni_ids))
+    return f"""
+        UPDATE news_items 
+        SET ds_id = %s
+        WHERE id in ({format_strings})
+    """
 
 fetch_news_to_be_revoked = """
     select * from news_items ni
@@ -138,4 +158,28 @@ revoked_news = """
     UPDATE news_items ni
     SET is_revoked = 1
     WHERE id = %s
+"""
+
+articles_to_summarize = """
+    SELECT ni.id
+    , ni.title
+    , sl.keyword
+    FROM news_items ni
+    join scrape_logs sl 
+        on sl.id = ni.sl_id 
+    where ni.summary is null 
+        or is_summary_revoked = 1
+"""
+
+fetch_article_summary = """
+   select summary
+   from news_items ni
+   where id in (%s)
+"""
+
+check_summary_finished = """
+    select COUNT(CASE WHEN summary IS NOT NULL THEN 1 END) AS not_null_count
+   , COUNT(*) item_count
+   from news_items ni
+   where id in (%s)
 """

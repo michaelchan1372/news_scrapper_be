@@ -59,9 +59,13 @@ def scrape_content(name, keyword):
     conn = database.init_connection()
     driver = selenium_runner.init_driver()
     news_items = database.news_items_to_scape(name)
+    total = str(len(news_items))
+    finished = 0
+    print(total + " of articles require selenium archive")
     for news_item in news_items:
         selenium_runner.scrape_article(driver, news_item, conn, name, keyword)
-        
+        finished = finished + 1
+        print("Finished selenium archive" + str(news_item["id"]) + ":" + str(finished) + "/" + total)
         time.sleep(2)
         
     conn.close()
