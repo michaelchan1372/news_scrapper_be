@@ -22,3 +22,4 @@ app.add_middleware(
 )
 
 app.include_router(router.scrapper_router)
+app.include_router(router.whatsapp_hook_router)

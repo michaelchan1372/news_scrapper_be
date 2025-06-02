@@ -11,7 +11,7 @@ DEFAULT_MODEL = "llama3.3:70b-instruct-q4_0"
 
 def init_llm():
     if ENABLE_OLLAMA == "1":
-        llm = ChatOllama(model=DEFAULT_MODEL,  num_ctx=4096)
+        llm = ChatOllama(model=DEFAULT_MODEL,  num_ctx=8192)
         return llm
     else:
         return None
