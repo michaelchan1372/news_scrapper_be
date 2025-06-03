@@ -188,8 +188,8 @@ get_recent_ds = """
        select ds.published, ds.summary, ds.keyword from daily_summary ds 
         join news_items ni 
         on ni.ds_id = ds.id 
+        WHERE ds.published >= DATE_SUB(CURDATE(), INTERVAL 5 DAY)
         order by ds.keyword, ds.published DESC 
-        limit %s
 """
 
 def get_summaries_by_dates(dates):

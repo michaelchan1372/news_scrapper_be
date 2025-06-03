@@ -74,7 +74,6 @@ def getSummaryToResponse(text):
     print(dates)
     if len(dates) > 0 and len(dates) != 2:
         reply = "Below is the summary of requested dates\n"
-        print("more than 1 day")
         res = get_summaries_by_dates(dates)
         if len(res) == 0:
             reply = "No summary found for the specific dates"
