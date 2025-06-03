@@ -1,10 +1,11 @@
+from datetime import datetime
 import os
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import PlainTextResponse
 from starlette import status
 from pydantic import BaseModel, Field
 
-from services.database import get_recent_summary, get_summaries_by_dates
+from services.database import get_recent_summary, get_summaries_by_date_range, get_summaries_by_dates
 from services.date import find_date
 from services.whatsapp import send_reply
 
@@ -68,14 +69,20 @@ async def test_webhook(params: TestRequest):
 def getSummaryToResponse(text):
     dates = find_date(text)
     print(dates)
-    if len(dates) > 0:
+    if len(dates) > 0 and len(dates) != 2:
         reply = "Below is the summary of requested dates\n"
         print("more than 1 day")
         res = get_summaries_by_dates(dates)
         if len(res) == 0:
             reply = "No summary found for the specific dates"
+    elif len(dates) == 2:
+        sorted_dates = sorted([dates[0], dates[1]], key=lambda d: datetime.strptime(d, "%Y-%m-%d"))
+        reply = f"Below is the summary between {sorted_dates[0]} to {sorted_dates[1]}\n"
+        res = get_summaries_by_date_range(sorted_dates[0], sorted_dates[1])
+        if len(res) == 0:
+            reply = "No summary found for the specific date range"
     else:
-        reply = "Below is the summary of 5 most recent published news\n"
+        reply = "Below is the summaries of news in the recent 5 days:\n"
         print("get 5 recent summary")
         res = get_recent_summary()
     last_keyword = "-1"
@@ -85,6 +92,6 @@ def getSummaryToResponse(text):
         summary = payload["summary"]
         if keyword != last_keyword:
             last_keyword = keyword
-            reply = reply + f"\n[{keyword}]\n"
-        reply = reply + f"Published date: {published_date}\n" + f"{summary}\n"
+            reply = reply + f"\nKeyword: [{keyword}]\n"
+        reply = reply + f"\nPublished date: {published_date}\n" + f"{summary}\n"
     return reply

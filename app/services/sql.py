@@ -198,6 +198,15 @@ def get_summaries_by_dates(dates):
         select ds.published, ds.summary, ds.keyword from daily_summary ds 
         join news_items ni 
         on ni.ds_id = ds.id 
-        where ds.published in ({format_strings})
+        WHERE ds.published >= DATE_SUB(CURDATE(), INTERVAL 5 DAY)
+        order by ds.keyword, ds.published DESC 
+    """
+
+get_summaries_by_date_range = """
+        select ds.published, ds.summary, ds.keyword from daily_summary ds 
+        join news_items ni 
+        on ni.ds_id = ds.id 
+        WHERE ds.published >= %s
+        and ds.published  <= %s
         order by ds.keyword, ds.published DESC 
     """

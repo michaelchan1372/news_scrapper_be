@@ -334,3 +334,21 @@ def get_summaries_by_dates(dates):
     conn.commit()
     conn.close()
     return res
+
+def get_summaries_by_date_range(date_1, date_2):
+    sorted_dates = sorted([date_1, date_2], key=lambda d: datetime.strptime(d, "%Y-%m-%d"))
+    conn = init_connection()
+    cursor = conn.cursor()
+    res = []
+    cursor.execute(sql.get_summaries_by_date_range, (sorted_dates[0], sorted_dates[1]))
+    rows = cursor.fetchall()
+    for row in rows:
+        payload = {}
+        payload["published_date"] = row[0]
+        payload["summary"] = row[1]
+        payload["keyword"] = row[2]
+        res.append(payload)
+        
+    conn.commit()
+    conn.close()
+    return res
