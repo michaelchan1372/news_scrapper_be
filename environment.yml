@@ -23,5 +23,4 @@ dependencies:
       - boto3
       - langchain 
       - langchain-community 
-      - ollama
       - langchain_ollama

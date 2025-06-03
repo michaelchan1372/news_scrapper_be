@@ -4,6 +4,8 @@ from fastapi.responses import PlainTextResponse
 from starlette import status
 from pydantic import BaseModel, Field
 
+from services.whatsapp import send_reply
+
 VERIFY_TOKEN = os.getenv('VERIFY_TOKEN')
 
 router = APIRouter(
@@ -23,7 +25,7 @@ async def verify_webhook(request: Request):
         return PlainTextResponse(content=challenge, status_code=200)
     return PlainTextResponse(content="Forbidden", status_code=403)
 
-@router.post("/webhook")
+@router.post("/hook")
 async def receive_webhook(request: Request):
     body = await request.json()
     print("Incoming webhook:", body)
@@ -41,7 +43,7 @@ async def receive_webhook(request: Request):
             print(f"Message from {phone}: {text}")
 
             # You can call the Cloud API here to reply (e.g., using httpx or requests)
-
+            send_reply(phone, f"Hi! You said: {text}")
     except Exception as e:
         print("Error handling message:", e)
 
