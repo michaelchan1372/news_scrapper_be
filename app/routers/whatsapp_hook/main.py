@@ -10,6 +10,7 @@ from services.date import find_date
 from services.whatsapp import send_reply
 
 VERIFY_TOKEN = os.getenv('VERIFY_TOKEN')
+chunk_size = 3000
 
 router = APIRouter(
     prefix='/webhook',
@@ -46,7 +47,9 @@ async def receive_webhook(request: Request):
             print(f"Message from {phone}: {text}")
             reply = getSummaryToResponse(text)
             # You can call the Cloud API here to reply (e.g., using httpx or requests)
-            send_reply(phone, f"{reply}")
+            for i in range(0, len(reply), chunk_size):
+                chunk = reply[i:i + chunk_size]
+                send_reply(phone, f"{chunk}")
     except Exception as e:
         print("Error handling message:", e)
 
