@@ -183,3 +183,21 @@ check_summary_finished = """
    from news_items ni
    where id in (%s)
 """
+
+get_recent_ds = """
+       select ds.published, ds.summary, ds.keyword from daily_summary ds 
+        join news_items ni 
+        on ni.ds_id = ds.id 
+        order by ds.keyword, ds.published DESC 
+        limit %s
+"""
+
+def get_summaries_by_dates(dates):
+    format_strings = ','.join(['%s'] * len(dates))
+    return f"""
+        select ds.published, ds.summary, ds.keyword from daily_summary ds 
+        join news_items ni 
+        on ni.ds_id = ds.id 
+        where ds.published in ({format_strings})
+        order by ds.keyword, ds.published DESC 
+    """

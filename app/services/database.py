@@ -300,3 +300,37 @@ def remove_news(region, published_date):
         ))
     conn.commit()
     conn.close()
+
+def get_recent_summary(num_days = 5):
+    conn = init_connection()
+    cursor = conn.cursor()
+    res = []
+    cursor.execute(sql.get_recent_ds, (num_days))
+    rows = cursor.fetchall()
+    for row in rows:
+        payload = {}
+        payload["published_date"] = row[0]
+        payload["summary"] = row[1]
+        payload["keyword"] = row[2]
+        res.append(payload)
+        
+    conn.commit()
+    conn.close()
+    return res
+
+def get_summaries_by_dates(dates):
+    conn = init_connection()
+    cursor = conn.cursor()
+    res = []
+    cursor.execute(sql.get_summaries_by_dates(dates), (dates))
+    rows = cursor.fetchall()
+    for row in rows:
+        payload = {}
+        payload["published_date"] = row[0]
+        payload["summary"] = row[1]
+        payload["keyword"] = row[2]
+        res.append(payload)
+        
+    conn.commit()
+    conn.close()
+    return res
