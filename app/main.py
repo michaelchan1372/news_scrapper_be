@@ -19,7 +19,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://news-scrapper-fe.vercel.app"],
+    allow_origins=["https://www.safersearch.org"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
