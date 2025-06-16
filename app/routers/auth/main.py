@@ -40,7 +40,7 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
         value=access_token,
         httponly=True,
         secure=IS_PRODUCTION == 1,  # only over HTTPS
-        samesite="lax",  # or "strict"
+        samesite="none",  # or "strict"
         max_age=60 * 60 * 24,
         path="/"
     )
@@ -126,7 +126,7 @@ def verify_email(params: UserEmailVericiation, response: Response):
         value=access_token,
         httponly=True,
         secure=IS_PRODUCTION == 1,  # only over HTTPS
-        samesite="lax",  # or "strict"
+        samesite="none",  # or "strict"
         max_age=60 * 60 * 24,
         path="/"
     )
