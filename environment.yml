@@ -24,3 +24,7 @@ dependencies:
       - langchain 
       - langchain-community 
       - langchain_ollama
+      - python-jose[cryptography] 
+      - passlib[bcrypt]
+      - python-multipart
+      - slowapi

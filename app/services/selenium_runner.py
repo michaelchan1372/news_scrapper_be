@@ -30,7 +30,6 @@ selectors = [
 RUNNING_IN_DOCKER = os.getenv('RUNNING_IN_DOCKER')
 
 def init_driver():
-    print("init chrome driver")
     options = Options()
     options.add_argument("--headless")  # Optional: run without opening a window
     # Create a unique temporary directory
@@ -43,7 +42,7 @@ def init_driver():
         )
         return driver
     else:
-        return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        return webdriver.Chrome(service=Service(ChromeDriverManager().install(), log_path=os.devnull), options=options)
 
 def scrape_article(driver, news_item, conn, region_name, keyword):
     news_link = news_item["link"]

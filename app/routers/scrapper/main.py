@@ -1,18 +1,22 @@
 import os
-from fastapi import APIRouter, Depends, Query, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import security
 from fastapi.responses import FileResponse
 import urllib
+
 from services import database
 from services.aws_s3 import get_presigned_url
 import services.file_write as file_write
+from services.jwt import verify_token_from_cookie
 import services.scrapper as scrapper
 from starlette import status
 from pydantic import BaseModel, Field
-import requests
+from fastapi.responses import JSONResponse
 
 router = APIRouter(
     prefix='/scrape',
-    tags=['scrape']
+    tags=['scrape'],
+    dependencies=[Depends(verify_token_from_cookie)],
 )
 
 ENABLE_SELENIUM = os.getenv('ENABLE_SELENIUM')
@@ -52,7 +56,8 @@ async def scrapping_req(params:ScrapeRequest, background_tasks: BackgroundTasks)
     }
 
 @router.get("/", status_code=status.HTTP_200_OK)
-async def get_data():
+async def get_data(token: str = Depends(verify_token_from_cookie)):
+    print(token)
     return database.fetch_group()
 
 
@@ -87,10 +92,12 @@ async def get_page_text(params:FetchPTextRequest):
     return text
     
 @router.post("/zip", status_code=status.HTTP_200_OK)
-async def get_page_text(params:FetchPTextRequest):
+async def get_zip_url(params:FetchPTextRequest):
+    print("KDSFJSDALFKJDSFLK")
     zip_path = database.fetch_page_path(params.id)["html_path"]
     url = get_presigned_url(zip_path)
-    return url
+    resp = JSONResponse(content={"url": url}, status_code=status.HTTP_200_OK)
+    return resp
 
 
 class HideQuery(BaseModel):
