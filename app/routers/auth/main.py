@@ -138,6 +138,10 @@ def verify_email(params: UserEmailVericiation, response: Response):
 def logout(response: Response):
     response.delete_cookie(
         key="token",
+        domain=".safersearch.org",
+        secure=IS_PRODUCTION == "1", 
+        httponly=True,
+        samesite="none",
         path="/",           # Must match the original cookie's path!
     )
     return {"message": "Logged out"}
