@@ -39,7 +39,7 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
         key="token",
         value=access_token,
         httponly=True,
-        secure=IS_PRODUCTION == 1,  # only over HTTPS
+        secure=IS_PRODUCTION == "1",  # only over HTTPS
         samesite="none",  # or "strict"
         domain=".safersearch.org",
         max_age=60 * 60 * 24,
@@ -126,7 +126,7 @@ def verify_email(params: UserEmailVericiation, response: Response):
         key="token",
         value=access_token,
         httponly=True,
-        secure=IS_PRODUCTION == 1,  # only over HTTPS
+        secure=IS_PRODUCTION == "1",  # only over HTTPS
         samesite="none",  # or "strict"
         domain=".safersearch.org",
         max_age=60 * 60 * 24,
