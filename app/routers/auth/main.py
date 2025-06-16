@@ -41,6 +41,7 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
         httponly=True,
         secure=IS_PRODUCTION == 1,  # only over HTTPS
         samesite="none",  # or "strict"
+        domain=".vercel.app",
         max_age=60 * 60 * 24,
         path="/"
     )
@@ -127,6 +128,7 @@ def verify_email(params: UserEmailVericiation, response: Response):
         httponly=True,
         secure=IS_PRODUCTION == 1,  # only over HTTPS
         samesite="none",  # or "strict"
+        domain=".vercel.app",
         max_age=60 * 60 * 24,
         path="/"
     )
