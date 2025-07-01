@@ -7,18 +7,22 @@ from fastapi import FastAPI, Depends
 import time
 
 from routers.scrapper.main import scrapping
+from services.database.keywords.database import get_all_keywords
 from services.llm import article_summary, daily_article_summary
 
 ENABLE_SELENIUM = os.getenv('ENABLE_SELENIUM')
 ENABLE_AI_SUMMARY = os.getenv('ENABLE_AI_SUMMARY')
 
 # todo, support db
-keywords = ["郭鳳儀", "Anna Kwok", "郭賢生", "Yin Sang Kwok", "HKDC", "香港民主委員會"]
+
 
 async def scrapping_action():
     print("Started scheduled job")
-    for keyword in keywords:
-        task = asyncio.create_task(scrapping(keyword, 10000))
+    keywords = get_all_keywords()
+    unique_keywords = set(item["keyword"] for item in keywords)
+    for keyword in unique_keywords:
+        regions = [item for item in keywords if item["keyword"] == keyword]
+        task = asyncio.create_task(scrapping(keyword, regions, 10000))
         await task
     # to do, udpate db
     print("Finish batch, waiting for next in 4 hours.")

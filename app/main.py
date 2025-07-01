@@ -1,3 +1,4 @@
+import os
 from typing import Annotated
 from fastapi import FastAPI, Depends
 import routers as router
@@ -13,13 +14,17 @@ app = FastAPI(lifespan=lifespan)
 
 load_dotenv()
 
-origins = [
-    "https://news-scrapper-ct8mo42gy-michael-chans-projects-4c4a7c7d.vercel.app",
-]
+
+IS_PRODUCTION=os.getenv("IS_PRODUCTION")
+
+allow_origins = ["*"]
+
+if IS_PRODUCTION == "1":
+    allow_origins = ["https://www.safersearch.org"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://www.safersearch.org"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,6 +37,7 @@ app.add_middleware(SlowAPIMiddleware)  # Optional: middleware support
 app.include_router(router.scrapper_router)
 app.include_router(router.whatsapp_hook_router)
 app.include_router(router.auth_router)
-
+app.include_router(router.nav_router)
+app.include_router(router.keyword_router)
 
 

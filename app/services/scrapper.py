@@ -3,20 +3,14 @@ from time import sleep
 import time
 import feedparser
 import urllib.parse
-import services.database as database
+import services.database.database as database
+from services.database.keywords.database import get_available_regions
 import services.file_write as file_write
 import services.selenium_runner as selenium_runner
-import services.database as database
+import services.database.database as database
 
 excluded_titel = ["Shopping", "Maps"]
 csv_titles = ['id','title', 'link', 'published', 'description', 'source']
-regions = [
-    {"name": "china","code": "hl=zh-CN&gl=CN&ceid=CN:zh"}, 
-    {"name": "hong kong", "code": "hl=zh-HK&gl=HK&ceid=HK:zh-Hant"},
-    {"name": "canada", "code": "hl=en-CA&gl=CA&ceid=CA%3Aen"},
-    {"name": "usa", "code": "gl=US&hl=en-US&ceid=US:en"},
-    {"name": "uk", "code": "hl=en-GB&gl=GB&ceid=GB:en"}
-]
 
 def get_news_links(keyword, max_results, region, region_name):
     conn = database.init_connection()

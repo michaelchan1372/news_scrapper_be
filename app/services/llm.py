@@ -4,7 +4,7 @@ from langchain.chains import LLMChain
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-from services.database import fetch_pages_summary, fetch_pages_text, get_daily_summarize_article, get_summarize_article, save_summary, save_summary_daily
+from services.database.database import fetch_pages_summary, fetch_pages_text, get_daily_summarize_article, get_summarize_article, save_summary, save_summary_daily
 
 ENABLE_OLLAMA = os.getenv('ENABLE_OLLAMA')
 DEFAULT_MODEL = "llama3.3:70b-instruct-q4_0"

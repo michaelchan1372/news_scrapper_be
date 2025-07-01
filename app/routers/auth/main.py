@@ -5,29 +5,34 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Form, Query, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from services import database
+from services.database.users import database
 from services.email import send_verification_email
 from services.limiter import limiter
 from services.jwt import create_access_token, get_password_hash, verify_password
 from pydantic import BaseModel
 from starlette import status
 
-
-
 IS_PRODUCTION=os.getenv("IS_PRODUCTION")
+
+domain = None
+samesite="lax"
+
+if IS_PRODUCTION == "1":
+    domain = ".safersearch.org"
+    samesite="none"
 
 router = APIRouter(
     prefix='/auth',
     tags=['auth']
 )
 
-
 class Token(BaseModel):
     access_token: str
     token_type: str
 
 @router.post("/login", status_code=status.HTTP_200_OK)
-def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("5/minute")
+def login(request: Request, response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
     user = database.get_user_data(form_data.username)
     if not user or not verify_password(form_data.password, user["hashed_password"]):
         raise HTTPException(status_code=400, detail="Invalid credentials")
@@ -40,8 +45,8 @@ def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends()):
         value=access_token,
         httponly=True,
         secure=IS_PRODUCTION == "1",  # only over HTTPS
-        samesite="none",  # or "strict"
-        domain=".safersearch.org",
+        samesite=samesite,  # or "strict"
+        domain=domain,
         max_age=60 * 60 * 24,
         path="/"
     )
@@ -127,8 +132,8 @@ def verify_email(params: UserEmailVericiation, response: Response):
         value=access_token,
         httponly=True,
         secure=IS_PRODUCTION == "1",  # only over HTTPS
-        samesite="none",  # or "strict"
-        domain=".safersearch.org",
+        samesite=samesite,  # or "strict"
+        domain=domain,
         max_age=60 * 60 * 24,
         path="/"
     )
@@ -138,10 +143,10 @@ def verify_email(params: UserEmailVericiation, response: Response):
 def logout(response: Response):
     response.delete_cookie(
         key="token",
-        domain=".safersearch.org",
+        domain=domain,
         secure=IS_PRODUCTION == "1", 
         httponly=True,
-        samesite="none",
+        samesite=samesite,
         path="/",           # Must match the original cookie's path!
     )
     return {"message": "Logged out"}

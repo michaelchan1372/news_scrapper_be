@@ -14,7 +14,7 @@ from urllib.parse import urljoin, urlparse
 import re
 
 from services.aws_s3 import upload_file_to_s3
-import services.database as database
+import services.database.database as database
 import services.file_write as file_write
 
 selectors = [

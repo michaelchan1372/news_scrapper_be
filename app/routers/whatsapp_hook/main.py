@@ -5,7 +5,7 @@ from fastapi.responses import PlainTextResponse
 from starlette import status
 from pydantic import BaseModel, Field
 
-from services.database import get_recent_summary, get_summaries_by_date_range, get_summaries_by_dates
+from services.database.database import get_recent_summary, get_summaries_by_date_range, get_summaries_by_dates
 from services.date import find_date
 from services.whatsapp import send_reply
 

@@ -4,7 +4,7 @@ from fastapi import security
 from fastapi.responses import FileResponse
 import urllib
 
-from services import database
+from services.database import database
 from services.aws_s3 import get_presigned_url
 import services.file_write as file_write
 from services.jwt import verify_token_from_cookie
@@ -21,13 +21,14 @@ router = APIRouter(
 
 ENABLE_SELENIUM = os.getenv('ENABLE_SELENIUM')
 
-async def scrapping(keyword, max_results):
+async def scrapping(keyword, regions, max_results):
     try:
         print("starting scrapping for " + keyword)
+        print(regions)
         region_items = {}
         file_write.create_folder_if_not_exist("./output")
 
-        regions = scrapper.regions
+        
         for region in regions:
             # 1. Scrap links
             name = region["name"]
