@@ -1,5 +1,5 @@
 get_all_keywords = """
-    select k.keyword, r.name, r.code 
+    select k.keyword, r.name, r.code, k.id, r.id
     from keyword_user_region kur 
     join keyword_user ku 
         on kur.ku_id = ku.id 
@@ -70,6 +70,22 @@ get_kur_id = """
         and ku.is_revoked = 0
         and k.id = %s
         and ku.user_id = %s
+"""
+
+get_kur_id_with_region = """
+    select kur.id
+    from keyword_user_region kur 
+    join keyword_user ku 
+        on kur.ku_id = ku.id 
+    join regions r 
+        on r.id = kur.region_id 
+    join keywords k 
+        on ku.keyword_id = k.id
+    where kur.is_revoked = 0
+        and ku.is_revoked = 0
+        and k.id = %s
+        and ku.user_id = %s
+        and kur.region_id = %s
 """
 
 set_kur_active = """

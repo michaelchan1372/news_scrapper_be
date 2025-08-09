@@ -42,7 +42,7 @@ async def daily_article_summary():
                 if len(texts) != 0:
                     llm = init_llm()
                     messages = []
-                    print("getting daily summary for ids: " + ni_ids)
+                    print("getting daily summary for ids: " + str(ni_ids))
                     messages.append(("system", "You are a helpful news analysts who summarize a list of news summary into one."))
                     article_concat = ""
                     for text in texts:

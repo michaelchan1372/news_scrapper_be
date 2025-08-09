@@ -32,10 +32,10 @@ def init_connection():
     )
     return conn
 
-def create_logs(conn, region_name, keyword):
+def create_logs(conn, region_name, keyword, k_id, r_id):
     cursor = conn.cursor()
     current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    cursor.execute(sql.insert_logs_to_db, (current_datetime, region_name, keyword))   
+    cursor.execute(sql.insert_logs_to_db, (current_datetime, region_name, keyword, k_id, r_id))   
     conn.commit()
 
     cursor.execute(sql.select_log_id, (current_datetime))   
@@ -79,11 +79,11 @@ def scrape_history(conn):
     cursor.close()
     return (titles, links)
 
-def fetch_group():
+def fetch_group(uid):
     res = []
     conn = init_connection()
     cursor = conn.cursor()
-    cursor.execute(sql.find_by_scrape_date)
+    cursor.execute(sql.find_by_scrape_date, (uid))
     rows = cursor.fetchall()
     for row in rows:
         payload = {}

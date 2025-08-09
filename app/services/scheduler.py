@@ -39,6 +39,7 @@ async def daily_summary():
 
 
 def run_scheduler():
+    print(ENABLE_SELENIUM)
     if ENABLE_SELENIUM == "1":
         print("SELENIUM is enabled")
         asyncio.run(scrapping_action())

@@ -4,8 +4,8 @@ insert_news_items_to_db = """
 """
 
 insert_logs_to_db = """
-    INSERT INTO scrape_logs (`scrape_date`, region, keyword)
-    VALUES (%s, %s, %s)
+    INSERT INTO scrape_logs (`scrape_date`, region, keyword, k_id, r_id)
+    VALUES (%s, %s, %s, %s, %s)
 """
 
 select_log_id = """
@@ -34,13 +34,27 @@ find_by_scrape_date = """
     , GROUP_CONCAT(distinct sl.keyword) keywords
     , GROUP_CONCAT(distinct ds.summary) summary
     from news_items ni 
-    join scrape_logs sl on sl.id = ni.sl_id 
+    join scrape_logs sl 
+        on sl.id = ni.sl_id
+    join keywords k 
+    	on k.id = sl.k_id
+	join keyword_user ku 
+        on ku.keyword_id = k.id
+        and ku.is_revoked = 0
+        and ku.user_id = %s
+    join keyword_user_region kur 
+    	on kur.ku_id = ku.id 
+    	and kur.is_active = 1
+    	and kur.is_revoked = 0
+	join regions r 
+		on r.id = kur.region_id 
+		and r.id = sl.r_id 
     left join daily_summary ds 
-    on ni.ds_id = ds.id
-    and ds.is_revoked = 0
+        on ni.ds_id = ds.id
+        and ds.is_revoked = 0
     where ni.is_revoked = 0
-    and ni.is_hidden = 0
-    GROUP BY DATE(ni.published), sl.region 
+        and ni.is_hidden = 0
+    GROUP BY DATE(ni.published), sl.r_id 
     ORDER BY published_date desc
 """
 
@@ -105,7 +119,7 @@ daily_news_to_summarize = """
         join scrape_logs sl 
         on ni.sl_id = sl.id
         WHERE ni.is_revoked = 0
-        GROUP BY publised_date, sl.region , sl.keyword 
+        GROUP BY publised_date, sl.region , sl.k_id 
         ORDER BY publised_date
     ) t
     left join  daily_summary ds 

@@ -17,6 +17,9 @@ def get_all_path():
             "path": row[1],
             "is_active": row[2],
             "is_dashboard": row[3],
+            "title": row[4],
+            "icon": row[5],
+            "image": row[6]
         }
         for row in rows
     ]

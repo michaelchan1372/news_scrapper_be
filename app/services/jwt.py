@@ -9,6 +9,7 @@ from starlette import status
 
 security = HTTPBearer()
 TOKEN_COOKIE_NAME = "token"
+REFRESH_TOKEN_NAME = "refresh_token"
 
 # JWT settings
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -32,6 +33,19 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 def verify_token_from_cookie(request: Request):
     token = request.cookies.get(TOKEN_COOKIE_NAME)
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload  # optionally return user info from payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+def verify_refresh_token_from_cookie(request: Request):
+    token = request.cookies.get(REFRESH_TOKEN_NAME)
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -4,5 +4,8 @@ get_all_path = """
     , path
     , is_active
     , is_dashboard 
+    , title
+    , icon
+    , image
     from navigations n 
 """

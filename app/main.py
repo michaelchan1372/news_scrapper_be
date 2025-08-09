@@ -1,19 +1,23 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+dotenv_path = Path(__file__).parent.parent / ".env"
+load_dotenv(dotenv_path=dotenv_path)
+
 from typing import Annotated
 from fastapi import FastAPI, Depends
 import routers as router
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
+
 from services.limiter import limiter
 from services.scheduler import lifespan
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi import _rate_limit_exceeded_handler
 
+
 app = FastAPI(lifespan=lifespan)
-
-load_dotenv()
-
 
 IS_PRODUCTION=os.getenv("IS_PRODUCTION")
 

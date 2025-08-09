@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from services.database.users import database
 from services.email import send_verification_email
 from services.limiter import limiter
-from services.jwt import create_access_token, get_password_hash, verify_password
+from services.jwt import REFRESH_TOKEN_NAME, TOKEN_COOKIE_NAME, create_access_token, get_password_hash, verify_password, verify_refresh_token_from_cookie
 from pydantic import BaseModel
 from starlette import status
 
@@ -39,16 +39,27 @@ def login(request: Request, response: Response, form_data: OAuth2PasswordRequest
     if user["is_active"] == 0:
         raise HTTPException(status_code=400, detail="user not active")
     access_token = create_access_token(data={"sub": user["username"], "uid": user["id"]}, expires_delta=timedelta(minutes=60))
+    refresh_token = create_access_token(data={"sub": user["username"], "uid": user["id"]}, expires_delta=timedelta(days=7))
     resp = JSONResponse(content={"message": "Login successful"}, status_code=status.HTTP_200_OK)
     resp.set_cookie(
-        key="token",
+        key=TOKEN_COOKIE_NAME,
         value=access_token,
         httponly=True,
         secure=IS_PRODUCTION == "1",  # only over HTTPS
         samesite=samesite,  # or "strict"
         domain=domain,
-        max_age=60 * 60 * 24,
+        max_age=60 * 60,
         path="/"
+    )
+    resp.set_cookie(
+        key=REFRESH_TOKEN_NAME,
+        value=refresh_token,
+        httponly=True,
+        secure=IS_PRODUCTION == "1",
+        samesite=samesite,
+        domain=domain,
+        max_age=60 * 60 * 24 * 7,  # 7 days
+        path="/auth/refresh"
     )
     return resp
 
@@ -127,22 +138,41 @@ def verify_email(params: UserEmailVericiation, response: Response):
             database.update_user_verification_failed(user["verification_failed"] + 1, user["id"])
         raise HTTPException(status_code=400, detail="Verification Code Not Match")
     access_token = create_access_token(data={"sub": user["username"], "uid": user["id"]}, expires_delta=timedelta(minutes=60))
+    refresh_token = create_access_token(data={"sub": user["username"], "uid": user["id"]}, expires_delta=timedelta(days=7))
     response.set_cookie(
-        key="token",
+        key=TOKEN_COOKIE_NAME,
         value=access_token,
         httponly=True,
         secure=IS_PRODUCTION == "1",  # only over HTTPS
         samesite=samesite,  # or "strict"
         domain=domain,
-        max_age=60 * 60 * 24,
+        max_age=60 * 60,
         path="/"
+    )
+    response.set_cookie(
+        key=REFRESH_TOKEN_NAME,
+        value=refresh_token,
+        httponly=True,
+        secure=IS_PRODUCTION == "1",
+        samesite=samesite,
+        domain=domain,
+        max_age=60 * 60 * 24 * 7,  # 7 days
+        path="/auth/refresh"
     )
     return {"message": "success"}
 
 @router.post("/logout")
 def logout(response: Response):
     response.delete_cookie(
-        key="token",
+        key=TOKEN_COOKIE_NAME,
+        domain=domain,
+        secure=IS_PRODUCTION == "1", 
+        httponly=True,
+        samesite=samesite,
+        path="/",           # Must match the original cookie's path!
+    )
+    response.delete_cookie(
+        key=REFRESH_TOKEN_NAME,
         domain=domain,
         secure=IS_PRODUCTION == "1", 
         httponly=True,
@@ -150,3 +180,32 @@ def logout(response: Response):
         path="/",           # Must match the original cookie's path!
     )
     return {"message": "Logged out"}
+
+@router.post("/refresh", status_code=status.HTTP_200_OK)
+def refresh_token(token: str = Depends(verify_refresh_token_from_cookie)):
+    if refresh_token is None:
+        raise HTTPException(status_code=401, detail="Refresh token missing")
+
+    try:
+        print(token)
+        uid = token["uid"]
+        username = token["sub"]
+        if username is None or uid is None:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+
+        new_access_token = create_access_token(data={"sub": username, "uid": uid}, expires_delta=timedelta(minutes=60))
+        response = JSONResponse(content={"message": "Token refreshed"})
+        response.set_cookie(
+            key=TOKEN_COOKIE_NAME,
+            value=new_access_token,
+            httponly=True,
+            secure=IS_PRODUCTION == "1",
+            samesite=samesite,
+            domain=domain,
+            max_age=60 * 60,  # 1 hour
+            path="/"
+        )
+        return response
+    except Exception as e:
+        print(e)
+        raise HTTPException(status_code=401, detail="Invalid refresh token")

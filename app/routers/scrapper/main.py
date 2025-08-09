@@ -32,7 +32,9 @@ async def scrapping(keyword, regions, max_results):
         for region in regions:
             # 1. Scrap links
             name = region["name"]
-            news_items = scrapper.get_news_links(keyword, max_results, region["code"], name)
+            k_id = region["k_id"]
+            r_id = region["r_id"]
+            news_items = scrapper.get_news_links(keyword, max_results, region["code"], name, k_id, r_id)
             region_items[name] = news_items
 
         for region in regions:
@@ -58,8 +60,8 @@ async def scrapping_req(params:ScrapeRequest, background_tasks: BackgroundTasks)
 
 @router.get("/", status_code=status.HTTP_200_OK)
 async def get_data(token: str = Depends(verify_token_from_cookie)):
-    print(token)
-    return database.fetch_group()
+    uid = token["uid"]
+    return database.fetch_group(uid)
 
 
 class DownloadRequest(BaseModel):

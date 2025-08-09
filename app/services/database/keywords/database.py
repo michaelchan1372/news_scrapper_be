@@ -13,7 +13,9 @@ def get_all_keywords():
         {
             "keyword": row[0],
             "name": row[1],
-            "code": row[2]
+            "code": row[2],
+            "k_id": row[3],
+            "r_id": row[4]
         }
         for row in rows
     ]
@@ -59,12 +61,14 @@ def add_keyword(keyword, uid):
     conn = init_connection()
     cursor = conn.cursor()
     cursor.execute(sql.get_keyword_id, (keyword))
-    row = cursor.fetchone()
-    if row == None:
+    rows = cursor.fetchall()
+    if len(rows) == 0:
         id = create_keyword(keyword, conn)
     else:
         id = row[0]
 
+    conn = init_connection()
+    cursor = conn.cursor()
     cursor.execute(sql.get_keyword_user, (id, uid))
     row = cursor.fetchone()
     if row != None:
@@ -89,19 +93,21 @@ def add_region_to_keyword(keyword, uid, region_id):
     cursor.execute(sql.get_keyword_id, (keyword))
     row = cursor.fetchone()
     id = row[0]
-    cursor.execute(sql.get_kur_id, (id, uid))
+    cursor.execute(sql.get_kur_id_with_region, (id, uid, region_id))
     row = cursor.fetchone()
     if row != None:
         kur_id = row[0]
         cursor.execute(sql.set_kur_active, (kur_id))
+        last_id = kur_id
     else:
         cursor.execute(sql.get_keyword_user, (id, uid))
         row = cursor.fetchone()
         ku_id = row[0]
         cursor.execute(sql.create_kur, (ku_id, str(region_id)))
+        last_id = cursor.lastrowid
     conn.commit()
     conn.close()
-    return True
+    return last_id
 
 
 def remove_region_from_keyword(keyword, uid, region_id):
@@ -110,7 +116,7 @@ def remove_region_from_keyword(keyword, uid, region_id):
     cursor.execute(sql.get_keyword_id, (keyword))
     row = cursor.fetchone()
     id = row[0]
-    cursor.execute(sql.get_kur_id, (id, uid))
+    cursor.execute(sql.get_kur_id_with_region, (id, uid, region_id))
     row = cursor.fetchone()
     if row != None:
         kur_id = row[0]

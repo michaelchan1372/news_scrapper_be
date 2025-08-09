@@ -53,6 +53,7 @@ def add_new_keyword(request: Request, params: Keyword, token: str = Depends(veri
     uid = token["uid"]
     keyword = params.keyword
     (ku_id, keyword_id) = database.add_keyword(keyword, uid)
+    database.add_region_to_keyword(keyword, uid, 2)
     return {
         "ku_id": ku_id,
         "keyword_id": keyword_id
@@ -67,12 +68,14 @@ def add_new_keyword(request: Request, params: KeywordRegion, token: str = Depend
     uid = token["uid"]
     keyword = params.keyword
     region_id = params.region_id
-    return  database.add_region_to_keyword(keyword, uid, region_id)
+    return  {
+        "kur_id": database.add_region_to_keyword(keyword, uid, region_id),
+    }
     
-@router.post("/remove_keyword_region")
-def add_new_keyword(request: Request, params: KeywordRegion, token: str = Depends(verify_token_from_cookie)):
+@router.delete("/remove_keyword_region")
+def add_new_keyword(request: Request, params: KeywordRegion = Depends(), token: str = Depends(verify_token_from_cookie)):
     uid = token["uid"]
     keyword = params.keyword
     region_id = params.region_id
-    return  database.remove_region_from_keyword(keyword, uid, region_id)
+    return  {"message": database.remove_region_from_keyword(keyword, uid, region_id)} 
     

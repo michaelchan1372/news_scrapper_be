@@ -12,9 +12,9 @@ import services.database.database as database
 excluded_titel = ["Shopping", "Maps"]
 csv_titles = ['id','title', 'link', 'published', 'description', 'source']
 
-def get_news_links(keyword, max_results, region, region_name):
+def get_news_links(keyword, max_results, region, region_name, k_id, r_id):
     conn = database.init_connection()
-    log_id = database.create_logs(conn, region_name, keyword)
+    log_id = database.create_logs(conn, region_name, keyword, k_id, r_id)
     (titles, links) = database.scrape_history(conn)
     encoded_keyword = urllib.parse.quote_plus(keyword)
 
