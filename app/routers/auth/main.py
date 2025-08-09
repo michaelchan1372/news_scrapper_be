@@ -177,7 +177,7 @@ def logout(response: Response):
         secure=IS_PRODUCTION == "1", 
         httponly=True,
         samesite=samesite,
-        path="/",           # Must match the original cookie's path!
+        path="/auth/refresh",           # Must match the original cookie's path!
     )
     return {"message": "Logged out"}
 
