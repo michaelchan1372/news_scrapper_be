@@ -80,11 +80,13 @@ async def download_data(params:DownloadRequest):
 class FetchPageRequest(BaseModel):
     region: str
     published_date: str
+    k_id: int
 
 @router.post("/page", status_code=status.HTTP_200_OK)
-async def get_page_data(params:FetchPageRequest):
+async def get_page_data(params:FetchPageRequest, token: str = Depends(verify_token_from_cookie)):
     params.region = urllib.parse.unquote(params.region)
-    return database.fetch_page(params.published_date, params.region)
+    uid = token["uid"]
+    return database.fetch_page(params.published_date, params.region, params.k_id, uid)
 
 class FetchPTextRequest(BaseModel):
     id: str

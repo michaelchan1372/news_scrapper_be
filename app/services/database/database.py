@@ -90,18 +90,21 @@ def fetch_group(uid):
         payload["published_date"] = row[0]
         payload["region"] = row[1]
         payload["num"] = row[2]
-        payload["keywords"] = row[3]
+        payload["keyword"] = row[3]
         payload["summary"] = row[4]
+        payload["k_id"] = row[5]
         res.append(payload)
     conn.close()
     return res
 
 
-def fetch_page(published_date, region):
+def fetch_page(published_date, region, k_id, uid):
     res = []
     conn = init_connection()
     cursor = conn.cursor()
-    cursor.execute(sql.find_page, (published_date, region))
+    print(published_date)
+    print(region)
+    cursor.execute(sql.find_page, (published_date, region, k_id, uid))
     rows = cursor.fetchall()
     for row in rows:
         payload = {}

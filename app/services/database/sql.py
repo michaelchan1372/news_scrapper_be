@@ -31,8 +31,9 @@ find_history = """
 find_by_scrape_date = """
     select DATE(ni.published) published_date
     , sl.region, count(*) num
-    , GROUP_CONCAT(distinct sl.keyword) keywords
+    , sl.keyword keyword
     , GROUP_CONCAT(distinct ds.summary) summary
+    , k.id k_id
     from news_items ni 
     join scrape_logs sl 
         on sl.id = ni.sl_id
@@ -54,7 +55,7 @@ find_by_scrape_date = """
         and ds.is_revoked = 0
     where ni.is_revoked = 0
         and ni.is_hidden = 0
-    GROUP BY DATE(ni.published), sl.r_id 
+    GROUP BY DATE(ni.published), sl.r_id, k.id
     ORDER BY published_date desc
 """
 
@@ -73,10 +74,16 @@ find_page = """
     from news_items ni 
     join scrape_logs sl 
         on ni.sl_id = sl.id
+    join keywords k 
+    	on k.id = sl.k_id 
+	join keyword_user ku 
+		on ku.keyword_id = k.id 
     where  DATE(ni.published) = %s
-        and sl.region = %s  
+        and sl.region = %s
         and ni.is_hidden = 0
         and ni.is_revoked = 0
+        and k.id = %s
+        and ku.user_id = %s
     ORDER BY published desc
 """
 
