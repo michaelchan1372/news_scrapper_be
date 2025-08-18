@@ -71,7 +71,6 @@ async def test_webhook(params: TestRequest):
 
 def getSummaryToResponse(text):
     dates = find_date(text)
-    print(dates)
     if len(dates) > 0 and len(dates) != 2:
         reply = "Below is the summary of requested dates\n"
         res = get_summaries_by_dates(dates)

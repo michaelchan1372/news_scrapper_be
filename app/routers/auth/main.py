@@ -187,7 +187,6 @@ def refresh_token(token: str = Depends(verify_refresh_token_from_cookie)):
         raise HTTPException(status_code=401, detail="Refresh token missing")
 
     try:
-        print(token)
         uid = token["uid"]
         username = token["sub"]
         if username is None or uid is None:

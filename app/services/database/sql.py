@@ -41,12 +41,10 @@ find_by_scrape_date = """
     	on k.id = sl.k_id
 	join keyword_user ku 
         on ku.keyword_id = k.id
-        and ku.is_revoked = 0
         and ku.user_id = %s
     join keyword_user_region kur 
     	on kur.ku_id = ku.id 
     	and kur.is_active = 1
-    	and kur.is_revoked = 0
 	join regions r 
 		on r.id = kur.region_id 
 		and r.id = sl.r_id 
@@ -112,7 +110,14 @@ news_items_to_scrape = """
     , ni.source
     from news_items ni 
     join scrape_logs sl 
-    on ni.sl_id = sl.id 
+        on ni.sl_id = sl.id 
+    join keywords k 
+        on k.id = sl.k_id
+    join keyword_user ku 
+        on ku.keyword_id = k.id
+   	join keyword_user_region kur 
+   	    on kur.ku_id = ku.id 
+   	    and kur.is_active = 1
     where sl.region = %s
     and (ni.content_path is null or ni.html_path is null)
     and ni.is_revoked = 0
@@ -125,6 +130,13 @@ daily_news_to_summarize = """
         FROM news_items ni
         join scrape_logs sl 
         on ni.sl_id = sl.id
+        join keywords k 
+        on k.id = sl.k_id
+        join keyword_user ku 
+            on ku.keyword_id = k.id
+        join keyword_user_region kur 
+            on kur.ku_id = ku.id 
+            and kur.is_active = 1
         WHERE ni.is_revoked = 0
         GROUP BY publised_date, sl.region , sl.k_id 
         ORDER BY publised_date
@@ -188,8 +200,16 @@ articles_to_summarize = """
     FROM news_items ni
     join scrape_logs sl 
         on sl.id = ni.sl_id 
+    join keywords k 
+        on k.id = sl.k_id 
+    join keyword_user ku 
+        on ku.keyword_id = k.id
+   	join keyword_user_region kur 
+   	    on kur.ku_id = ku.id 
+   	    and kur.is_active = 1
     where ni.summary is null 
         or is_summary_revoked = 1
+    group by ni.id
 """
 
 fetch_article_summary = """

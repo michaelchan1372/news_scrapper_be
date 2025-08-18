@@ -21,6 +21,5 @@ def get_all_active_path():
 @router.get("/dashboard", status_code=status.HTTP_200_OK)
 def get_dashboard():
     paths = database.get_all_path()
-    print(paths)
     active_paths = [item for item in paths if item["is_dashboard"] == 1]
     return active_paths

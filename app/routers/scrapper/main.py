@@ -24,7 +24,6 @@ ENABLE_SELENIUM = os.getenv('ENABLE_SELENIUM')
 async def scrapping(keyword, regions, max_results):
     try:
         print("starting scrapping for " + keyword)
-        print(regions)
         region_items = {}
         file_write.create_folder_if_not_exist("./output")
 
@@ -98,7 +97,6 @@ async def get_page_text(params:FetchPTextRequest):
     
 @router.post("/zip", status_code=status.HTTP_200_OK)
 async def get_zip_url(params:FetchPTextRequest):
-    print("KDSFJSDALFKJDSFLK")
     zip_path = database.fetch_page_path(params.id)["html_path"]
     url = get_presigned_url(zip_path)
     resp = JSONResponse(content={"url": url}, status_code=status.HTTP_200_OK)
