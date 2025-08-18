@@ -289,3 +289,27 @@ update_verification_success = """
     SET is_active = 1
     WHERE id = %s
 """
+
+get_user_latest_scrape_date = """
+    select max(sl.scrape_date)
+    from news_items ni 
+    join scrape_logs sl 
+        on sl.id = ni.sl_id
+    join keywords k 
+    	on k.id = sl.k_id
+	join keyword_user ku 
+        on ku.keyword_id = k.id
+        and ku.user_id = %s
+    join keyword_user_region kur 
+    	on kur.ku_id = ku.id 
+    	and kur.is_active = 1
+	join regions r 
+		on r.id = kur.region_id 
+		and r.id = sl.r_id 
+    left join daily_summary ds 
+        on ni.ds_id = ds.id
+        and ds.is_revoked = 0
+    where ni.is_revoked = 0
+        and ni.is_hidden = 0
+    limit 1
+"""

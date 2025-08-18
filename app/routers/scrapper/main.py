@@ -110,3 +110,9 @@ class HideQuery(BaseModel):
 async def remove_news(params: HideQuery = Depends()):
     database.remove_news(params.region, params.published_date)
     return "success"
+
+@router.get("/settings", status_code=status.HTTP_200_OK)
+async def get_settings(token: str = Depends(verify_token_from_cookie)):
+    uid = token["uid"]
+    res = database.get_scrape_setting(uid)
+    return res

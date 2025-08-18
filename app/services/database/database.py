@@ -355,4 +355,15 @@ def get_summaries_by_date_range(date_1, date_2):
     conn.close()
     return res
 
-
+def get_scrape_setting(uid):
+    conn = init_connection()
+    cursor = conn.cursor()
+    cursor.execute(sql.get_user_latest_scrape_date, (uid))
+    res = {}
+    result = cursor.fetchone()
+    print(result)
+    res["latest_scrape_date"] = result[0]
+        
+    conn.commit()
+    conn.close()
+    return res
