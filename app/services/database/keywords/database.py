@@ -21,6 +21,25 @@ def get_all_keywords():
     ]
     conn.close()
     return res
+    
+def get_all_keywords_by_uid(uid):
+    conn = init_connection()
+    cursor = conn.cursor()
+    res = []
+    cursor.execute(sql.get_all_keywords_by_uid, (uid))
+    rows = cursor.fetchall()
+    res = [
+        {
+            "keyword": row[0],
+            "name": row[1],
+            "code": row[2],
+            "k_id": row[3],
+            "r_id": row[4]
+        }
+        for row in rows
+    ]
+    conn.close()
+    return res
 
 def get_user_keywords(uid):
     conn = init_connection()
@@ -33,7 +52,9 @@ def get_user_keywords(uid):
             "keyword": row[0],
             "name": row[1],
             "code": row[2],
-            "kur_id": row[3]
+            "kur_id": row[3],
+            "k_id": row[4],
+            "r_id": row[5]
         }
         for row in rows
     ]

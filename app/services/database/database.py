@@ -2,7 +2,7 @@ import pymysql
 import requests
 from services.aws_s3 import get_presigned_url
 import services.database.sql as sql
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 
 db_user=os.environ['db_user']
@@ -34,7 +34,7 @@ def init_connection():
 
 def create_logs(conn, region_name, keyword, k_id, r_id):
     cursor = conn.cursor()
-    current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    current_datetime = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
     cursor.execute(sql.insert_logs_to_db, (current_datetime, region_name, keyword, k_id, r_id))   
     conn.commit()
 
@@ -141,7 +141,6 @@ def fetch_page_paths(ids):
     res = []
     cursor.execute(sql.find_page_path, (ids))
     rows = cursor.fetchall()
-
     for row in rows:
         payload = {}
         payload["id"] = row[0]
@@ -185,11 +184,14 @@ def fetch_pages_text(ids):
     res = []
     for page in pages:
         path = page["content_path"]
-        url = get_presigned_url(path)
-        response = requests.get(url)
-        text = response.text
-        res.append(text)
-    return res
+        if(path):
+            url = get_presigned_url(path)
+            response = requests.get(url)
+            text = response.text
+            res.append(text)
+            return res
+        else:
+            return None
 
 def fetch_pages_summary(ids):
     conn = init_connection()
@@ -219,7 +221,7 @@ def fetch_article_summary(ids):
 
 def get_daily_summarize_article():
     # Find any article that does not have a summarize id
-    # to combine with existing ds of same date
+    # to combine with existing ids of same date
     conn = init_connection()
     cursor = conn.cursor()
     res = []
@@ -364,6 +366,26 @@ def get_scrape_setting(uid):
     print(result)
     res["latest_scrape_date"] = result[0]
         
+    conn.commit()
+    conn.close()
+    return res
+    
+def get_user_news_item_latest(date, uid):
+    conn = init_connection()
+    cursor = conn.cursor()
+    print(date)
+    if date is None:
+        cursor.execute(sql.get_user_news_item_latest_recent_5, (uid))
+    else:
+        cursor.execute(sql.get_user_news_item_latest, (uid, date))
+    res = []
+    rows = cursor.fetchall()
+    for row in rows:
+        payload = {}
+        payload["ni_id"] = row[0]
+        payload["title"] = row[1]
+        payload["published"] = row[2]
+        res.append(payload)
     conn.commit()
     conn.close()
     return res

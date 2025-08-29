@@ -69,3 +69,21 @@ def update_user_verification_success(user_id):
     conn.commit()
     cursor.close()
     return True
+    
+def get_all_user_notification_settings():
+    conn = init_connection()
+    cursor = conn.cursor()
+    cursor.execute(sql.get_all_user_notification_settings, ())
+    res = []
+    rows = cursor.fetchall()
+    for row in rows:
+        payload = {}
+        payload["uid"] = row[0]
+        payload["is_email_notifications"] = row[1]
+        payload["is_whatsapp_notifications"] = row[2]
+        payload["last_notified"] = row[3]
+        payload["email"] = row[4]
+        res.append(payload)
+    cursor.close()
+    print(res)
+    return res

@@ -36,3 +36,16 @@ update_verification_success = """
     SET is_active = 1
     WHERE id = %s
 """
+
+get_all_user_notification_settings = """
+    select u.id
+    , u.is_email_notifications
+    , u.is_whatsapp_notifications
+    , max(un.created_on) last_notified
+    , u.email
+    from users u 
+    left join user_notifications un 
+    on un.uid = u.id 
+    where u.is_revoked = 0
+    and u.is_active = 1
+"""

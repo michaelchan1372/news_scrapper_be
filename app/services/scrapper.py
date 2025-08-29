@@ -17,7 +17,7 @@ def get_news_links(keyword, max_results, region, region_name, k_id, r_id):
     log_id = database.create_logs(conn, region_name, keyword, k_id, r_id)
     (titles, links) = database.scrape_history(conn)
     encoded_keyword = urllib.parse.quote_plus(keyword)
-
+    # get user last noitified
     rss_url = f"https://news.google.com/rss/search?q={encoded_keyword}&{region}"
     
     feed = feedparser.parse(rss_url)
@@ -26,6 +26,7 @@ def get_news_links(keyword, max_results, region, region_name, k_id, r_id):
     for idx, entry in enumerate(feed.entries[:max_results], start=1):
         source = entry.get("source", {})
         if  entry.title not in titles and entry.link not in links:
+            print(entry.published)
             object = {
                 'title': entry.title, 
                 'link': entry.link,

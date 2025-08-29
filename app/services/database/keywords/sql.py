@@ -11,8 +11,22 @@ get_all_keywords = """
     group by k.keyword , r.name 
 """
 
+get_all_keywords_by_uid = """
+    select k.keyword, r.name, r.code, k.id, r.id
+    from keyword_user_region kur 
+    join keyword_user ku 
+        on kur.ku_id = ku.id 
+    join regions r 
+        on r.id = kur.region_id 
+    join keywords k 
+        on ku.keyword_id = k.id
+    where kur.is_active = 1
+        and ku.user_id = %s
+    group by k.keyword , r.name 
+"""
+
 get_keyword_by_uid = """
-    select k.keyword, r.name, r.code, kur.id
+    select k.keyword, r.name, r.code, kur.id, k.id, r.id
     from keyword_user_region kur 
     join keyword_user ku 
         on kur.ku_id = ku.id 

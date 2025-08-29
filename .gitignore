@@ -114,3 +114,5 @@ output/
 *.pem
 *.key
 *.crt
+
+.history/

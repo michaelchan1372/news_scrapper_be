@@ -1,4 +1,5 @@
 import os
+from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 from langchain.chains import LLMChain
 from langchain.prompts import ChatPromptTemplate
@@ -8,14 +9,18 @@ from services.database.database import fetch_pages_summary, fetch_pages_text, ge
 
 ENABLE_OLLAMA = os.getenv('ENABLE_OLLAMA')
 DEFAULT_MODEL = "llama3.3:70b-instruct-q4_0"
-
+ENABLE_OPENAI = os.getenv('ENABLE_OPENAI')
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+DEFAULT_OPENAI_MODEL = os.getenv("DEFAULT_OPENAI_MODEL")
 def init_llm():
     if ENABLE_OLLAMA == "1":
         llm = ChatOllama(model=DEFAULT_MODEL,  num_ctx=8192)
         return llm
-    else:
-        return None
-    
+    elif ENABLE_OPENAI == "1":
+        if not OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY is not set in environment variables")
+        llm = ChatOpenAI(model=DEFAULT_OPENAI_MODEL, temperature=0, max_tokens=8192)
+        return llm
 def test():
     llm = init_llm()
     
@@ -28,21 +33,22 @@ def test():
     print(response.content)
 
 async def daily_article_summary():
-    if ENABLE_OLLAMA == "1":
+    if ENABLE_OLLAMA == "1" or ENABLE_OPENAI=="1":
         news_article_groups = get_daily_summarize_article()
         total = str(len(news_article_groups))
         finished = 0
+        total_token_spent_input = 0
+        total_token_spent_output = 0
         for news_article_group in news_article_groups:
             try:
                 ni_ids = news_article_group["ni_ids"]
-                print("starting daily summary of " + ni_ids)
+                print("starting daily summary of " + ni_ids + ", " + str(finished) + "/" + str(total))
                 # to do: change this function
                 texts = fetch_pages_summary(ni_ids)
                 print(texts)
                 if len(texts) != 0:
                     llm = init_llm()
                     messages = []
-                    print("getting daily summary for ids: " + str(ni_ids))
                     messages.append(("system", "You are a helpful news analysts who summarize a list of news summary into one."))
                     article_concat = ""
                     for text in texts:
@@ -51,29 +57,36 @@ async def daily_article_summary():
                     "I only need max two sentence sentences from you and the keyword is " + news_article_group["keyword"] + ": \n\n" + article_concat))
                     response = llm.invoke(messages, config={"max_tokens": 1024})
                     finished = finished + 1
-                    print("Finished AI daily summary for " + str(ni_ids) + ":" + str(finished) + "/" + total)
+                    print("Finished AI daily summary" + ":" + str(finished) + "/" + str(total))
+                    
                     news_article_group["summary"] = response.content
                     news_article_group["model_name"] = DEFAULT_MODEL
                     news_article_group["input_tokens"] = response.usage_metadata["input_tokens"]
                     news_article_group["output_tokens"] = response.usage_metadata["output_tokens"]
+                    total_token_spent_input = total_token_spent_input + int(response.usage_metadata["input_tokens"])
+                    total_token_spent_output = total_token_spent_output + int(response.usage_metadata["output_tokens"])
+                    #print("Token spent" + ":" + "input: " + str(total_token_spent_input) + ", output: " + str(total_token_spent_output))
                     save_summary_daily(news_article_group)
                 else:
                     print("summary of all aritcles are not finished")
             except Exception as e:
+                finished = finished + 1
                 print(e)
                 print(news_article_group["ni_ids"])
 
 async def article_summary():
-    if ENABLE_OLLAMA == "1":
+    if ENABLE_OLLAMA == "1" or ENABLE_OPENAI=="1":
         news_articles = get_summarize_article()
         total = str(len(news_articles))
         finished = 0
         print(total + " of articles require summary")
-
+        
         for news_article in news_articles:
             try:
                 ni_id = news_article["ni_id"]
                 texts = fetch_pages_text(ni_id)
+                if texts is None:
+                    raise Exception("Missing fetched content")
                 messages = []
                 messages.append(("system", "You are a helpful news analysts who summarize the give article."))
                 article_concat = ""
@@ -84,14 +97,15 @@ async def article_summary():
                 llm = init_llm()
                 print("Getting AI response for " + str(ni_id))
                 response = llm.invoke(messages, config={"max_tokens": 1024})
-                finished = finished + 1
-                print("Finished AI response " + str(ni_id) + ":" + str(finished) + "/" + total)
                 news_article["summary"] = response.content
                 news_article["model_name"] = DEFAULT_MODEL
                 news_article["input_tokens"] = response.usage_metadata["input_tokens"]
                 news_article["output_tokens"] = response.usage_metadata["output_tokens"]
                 save_summary(news_article)
+                finished = finished + 1
+                print("Finished AI response: " + str(finished) + "/" + total)
             except Exception as e:
+                finished = finished + 1
                 print(e)
                 print(news_article["ni_id"])
     

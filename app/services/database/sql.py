@@ -138,6 +138,7 @@ daily_news_to_summarize = """
             on kur.ku_id = ku.id 
             and kur.is_active = 1
         WHERE ni.is_revoked = 0
+            and ni.summary is not null
         GROUP BY publised_date, sl.region , sl.k_id 
         ORDER BY publised_date
     ) t
@@ -207,8 +208,9 @@ articles_to_summarize = """
    	join keyword_user_region kur 
    	    on kur.ku_id = ku.id 
    	    and kur.is_active = 1
-    where ni.summary is null 
-        or is_summary_revoked = 1
+    where (ni.summary is null 
+        or ni.is_summary_revoked = 1)
+        and ni.content_path is not null
     group by ni.id
 """
 
@@ -292,9 +294,7 @@ update_verification_success = """
 
 get_user_latest_scrape_date = """
     select max(sl.scrape_date)
-    from news_items ni 
-    join scrape_logs sl 
-        on sl.id = ni.sl_id
+    from scrape_logs sl    
     join keywords k 
     	on k.id = sl.k_id
 	join keyword_user ku 
@@ -306,10 +306,53 @@ get_user_latest_scrape_date = """
 	join regions r 
 		on r.id = kur.region_id 
 		and r.id = sl.r_id 
+    left join news_items ni 
+        on sl.id = ni.sl_id
     left join daily_summary ds 
         on ni.ds_id = ds.id
         and ds.is_revoked = 0
-    where ni.is_revoked = 0
-        and ni.is_hidden = 0
     limit 1
+"""
+
+get_user_news_item_latest = """
+    select ni.id
+        , ni.title 
+        , ni.published
+    FROM news_items ni
+    join scrape_logs sl 
+        on sl.id = ni.sl_id 
+    join keywords k 
+        on k.id = sl.k_id 
+    join keyword_user ku 
+        on ku.keyword_id = k.id
+   	join keyword_user_region kur 
+   	    on kur.ku_id = ku.id 
+   	    and kur.is_active = 1
+    where ku.user_id  = %s
+    and ni.published > %s
+    and ni.is_revoked = 0
+    group by ni.id
+    order by published desc
+    limit 5
+"""
+
+get_user_news_item_latest_recent_5 = """
+    select ni.id
+        , ni.title 
+        , ni.published 
+    FROM news_items ni
+    join scrape_logs sl 
+        on sl.id = ni.sl_id 
+    join keywords k 
+        on k.id = sl.k_id 
+    join keyword_user ku 
+        on ku.keyword_id = k.id
+   	join keyword_user_region kur 
+   	    on kur.ku_id = ku.id 
+   	    and kur.is_active = 1
+    where ku.user_id  = %s
+    and ni.is_revoked = 0
+    group by ni.id
+    order by published desc
+    limit 5
 """
