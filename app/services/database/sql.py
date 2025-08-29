@@ -241,7 +241,7 @@ def get_summaries_by_dates(dates):
         select ds.published, ds.summary, ds.keyword from daily_summary ds 
         join news_items ni 
         on ni.ds_id = ds.id 
-        WHERE ds.published >= DATE_SUB(CURDATE(), INTERVAL 5 DAY)
+        WHERE  CAST(ds.published AS DATE) in ({format_strings})
         order by ds.keyword, ds.published DESC 
     """
 
